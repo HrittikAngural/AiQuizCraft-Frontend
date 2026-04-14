@@ -13,7 +13,7 @@ const RewardsPage = () => {
     const fetchRewards = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/results/rewards', {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/results/rewards`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setRewards(response.data);

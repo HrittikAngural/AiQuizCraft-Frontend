@@ -47,7 +47,7 @@ const DashboardPage = () => {
         };
         
         console.log('Making API request...');
-        const response = await axios.get('http://localhost:5000/api/results/getresults', config);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/results/getresults`, config);
         console.log('API response:', response.data);
         
         setQuizHistory(Array.isArray(response.data) ? response.data : []);
