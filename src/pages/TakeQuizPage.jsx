@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, BookOpen, ChevronDown, Zap, Hourglass, AlarmClock } from 'lucide-react';
+import './TakeQuizPage.css';
 
 const hotTopics = ['JavaScript', 'Python', 'React', 'Node.js', 'Data Structures', 'Algorithms'];
 const difficultyLevels = ['Easy', 'Medium', 'Hard'];
 
 export default function TakeQuizPage() {
-    const [topic, setTopic] = useState('');
+    const location = useLocation();
+    const trendingTopic = location.state?.trendingTopic || '';
+    const topicTransition = Boolean(location.state?.topicTransition && trendingTopic);
+    const [topic, setTopic] = useState(trendingTopic);
     const [numQuestions, setNumQuestions] = useState(10);
     const [difficulty, setDifficulty] = useState('Medium');
     const [totalTime, setTotalTime] = useState(1); // Default 1 minute
@@ -74,7 +78,7 @@ export default function TakeQuizPage() {
             });
           } catch (err) {
             setError(err.message.includes('API key') 
-              ? 'Please configure a valid Gemini API key in the backend'
+                            ? 'Please configure a valid Groq API key in the backend'
               : err.message);
             console.error('Quiz submission error:', err);
           } finally {
@@ -83,7 +87,8 @@ export default function TakeQuizPage() {
         };
 
     return (
-        <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl">
+        <div className={`take-quiz-stage${topicTransition ? ' take-quiz-stage-transition' : ''}`}>
+        <div className="take-quiz-card max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <BookOpen className="text-blue-500" /> Take a Quiz
             </h2>
@@ -96,6 +101,7 @@ export default function TakeQuizPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         placeholder={`Try "${randomTopic}"`}
                         value={topic}
+                        style={topicTransition ? { viewTransitionName: 'quiz-topic' } : undefined}
                         required
                         maxLength={50}
                         onChange={(e) => setTopic(e.target.value)}
@@ -189,6 +195,7 @@ export default function TakeQuizPage() {
                     )}
                 </button>
             </form>
+        </div>
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 
@@ -8,11 +8,22 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await login({ email, password });
-    if (success) navigate('/');
+    if (success) {
+      const from = location.state?.from;
+      if (from?.pathname) {
+        navigate(
+          { pathname: from.pathname, search: from.search, hash: from.hash },
+          { replace: true, state: from.state }
+        );
+      } else {
+        navigate('/');
+      }
+    }
   };
 
   return (

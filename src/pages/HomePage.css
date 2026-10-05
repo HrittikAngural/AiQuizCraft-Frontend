@@ -1,0 +1,222 @@
+.home-page {
+  min-height: 100%;
+  background: #fff;
+  color: #102b4e;
+}
+
+.home-topics {
+  width: min(1240px, 100%);
+  margin: 0 auto;
+  padding: 44px 32px 8px;
+}
+
+.home-topics-heading {
+  text-align: center;
+}
+
+.home-eyebrow {
+  margin: 0 0 12px;
+  color: #49667f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.home-topics-heading h1 {
+  margin: 0;
+  color: #102b4e;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.home-topics-caption {
+  margin: 10px 0 0;
+  color: #687888;
+  font-size: 15px;
+}
+
+.topic-cloud {
+  position: relative;
+  width: min(1060px, 100%);
+  height: 430px;
+  margin: 8px auto 0;
+}
+
+.topic-word {
+  position: absolute;
+  appearance: none;
+  top: var(--word-y);
+  left: var(--word-x);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: 250px;
+  transform: translate(-50%, -50%) rotate(var(--word-rotation));
+  color: var(--word-color);
+  font-family: 'Aptos', 'Segoe UI', sans-serif;
+  font-size: var(--word-size);
+  font-weight: var(--word-weight);
+  line-height: 1.05;
+  text-align: center;
+  text-transform: capitalize;
+  text-wrap: balance;
+  cursor: pointer;
+  animation: topic-arrive 520ms both;
+  animation-delay: calc(var(--topic-index, 0) * 35ms);
+}
+
+.topic-word:focus-visible {
+  z-index: 2;
+  outline: 2px solid #426b91;
+  outline-offset: 5px;
+}
+
+.topic-word-leading {
+  max-width: 480px;
+  color: #0d2748;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+.topic-cloud-empty {
+  display: grid;
+  min-height: 330px;
+  place-items: center;
+  color: #687888;
+  font-size: 15px;
+  text-align: center;
+}
+
+.home-actions {
+  display: flex;
+  width: min(1060px, calc(100% - 64px));
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin: 0 auto;
+  padding: 24px 0 48px;
+}
+
+.home-action-copy h2 {
+  margin: 0;
+  color: #102b4e;
+  font-size: 23px;
+  font-weight: 650;
+}
+
+.home-action-copy p {
+  margin: 7px 0 0;
+  color: #687888;
+  font-size: 15px;
+}
+
+.home-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.home-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 18px;
+  border: 1px solid #163657;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 650;
+  transition: background-color 160ms ease, color 160ms ease;
+  cursor: pointer;
+}
+
+.home-button-primary {
+  background: #163657;
+  color: #fff;
+}
+
+.home-button-primary:hover {
+  background: #244d73;
+}
+
+.home-button-secondary {
+  background: #fff;
+  color: #163657;
+}
+
+.home-button-secondary:hover {
+  background: #f1f5f8;
+}
+
+@keyframes topic-arrive {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) rotate(var(--word-rotation)); }
+  to { opacity: 1; transform: translate(-50%, -50%) rotate(var(--word-rotation)); }
+}
+
+@media (max-width: 720px) {
+  .home-topics {
+    padding: 34px 20px 0;
+  }
+
+  .home-topics-heading h1 {
+    font-size: 31px;
+  }
+
+  .topic-cloud {
+    display: flex;
+    width: 100%;
+    height: auto;
+    min-height: 240px;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    gap: 14px 20px;
+    margin: 26px auto 10px;
+    flex-wrap: wrap;
+  }
+
+  .topic-word,
+  .topic-word-leading {
+    position: static;
+    max-width: 100%;
+    transform: none;
+    font-size: min(var(--word-size), 30px);
+    animation: none;
+  }
+
+  .topic-word-leading {
+    width: 100%;
+    margin-bottom: 3px;
+    font-size: min(var(--word-size), 46px);
+  }
+
+  .topic-cloud-empty {
+    min-height: 240px;
+    padding: 0 24px;
+  }
+
+  .home-actions {
+    width: calc(100% - 40px);
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+    padding: 28px 0 40px;
+  }
+
+  .home-action-copy h2 {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topic-word {
+    animation: none;
+  }
+
+  .home-button {
+    transition: none;
+  }
+}
