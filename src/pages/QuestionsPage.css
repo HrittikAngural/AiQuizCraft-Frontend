@@ -1,0 +1,226 @@
+.questions-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px 20px;
+  background: #f2f5f8;
+}
+
+.questions-card {
+  width: min(760px, 100%);
+  padding: clamp(22px, 4vw, 44px);
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 55px rgb(16 43 78 / 9%);
+}
+
+.questions-topline,
+.questions-progress-row,
+.questions-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.questions-topic {
+  overflow: hidden;
+  margin: 0;
+  color: #102b4e;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.questions-timer {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #d9e3ec;
+  border-radius: 4px;
+  background: #f4f7fa;
+  color: #294c6e;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.questions-progress-row {
+  margin-top: 34px;
+  color: #53677b;
+  font-size: 13px;
+}
+
+.questions-progress-row h2 {
+  margin: 0;
+  color: #102b4e;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.questions-progress-track {
+  height: 4px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e6ebf0;
+}
+
+.questions-progress-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: #355f83;
+  transition: width 240ms ease;
+}
+
+.questions-content {
+  min-height: 240px;
+  padding: 34px 0 28px;
+  animation: question-enter 220ms ease both;
+}
+
+.questions-prompt {
+  margin: 0 0 24px;
+  color: #172f49;
+  font-size: clamp(20px, 3vw, 27px);
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.questions-options {
+  display: grid;
+  gap: 10px;
+}
+
+.question-option {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid #dce4eb;
+  border-radius: 5px;
+  background: #fff;
+  color: #31485e;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease;
+  cursor: pointer;
+}
+
+.question-option:hover {
+  border-color: #8da7be;
+  background: #f8fafc;
+}
+
+.question-option-selected {
+  border-color: #355f83;
+  background: #edf3f8;
+  color: #102b4e;
+}
+
+.question-option-marker {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 1px solid #cbd7e1;
+  border-radius: 4px;
+  color: #4d657d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.question-option-selected .question-option-marker {
+  border-color: #355f83;
+  background: #355f83;
+  color: #fff;
+}
+
+.questions-submit-message {
+  margin: 0 0 16px;
+  color: #a33b36;
+  font-size: 14px;
+}
+
+.questions-navigation {
+  padding-top: 18px;
+  border-top: 1px solid #e5ebf0;
+}
+
+.question-nav-button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 650;
+  transition: background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+  cursor: pointer;
+}
+
+.question-nav-previous {
+  border-color: #d7e0e8;
+  background: #fff;
+  color: #294c6e;
+}
+
+.question-nav-previous:hover:not(:disabled) {
+  background: #f2f6f9;
+}
+
+.question-nav-next,
+.question-nav-finish {
+  background: #163657;
+  color: #fff;
+}
+
+.question-nav-next:hover,
+.question-nav-finish:hover:not(:disabled) {
+  background: #244d73;
+}
+
+.question-nav-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@keyframes question-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 560px) {
+  .questions-page {
+    align-items: start;
+    padding: 16px 12px;
+  }
+
+  .questions-card {
+    min-height: calc(100vh - 32px);
+    padding: 22px 18px;
+  }
+
+  .questions-content {
+    min-height: 0;
+    padding: 26px 0 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .questions-content,
+  .questions-progress-track > div,
+  .question-option,
+  .question-nav-button {
+    animation: none;
+    transition: none;
+  }
+}

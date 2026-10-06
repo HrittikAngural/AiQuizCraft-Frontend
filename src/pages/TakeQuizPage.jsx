@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Clock, BookOpen, ChevronDown, Zap, Hourglass, AlarmClock } from 'lucide-react';
+import { BookOpen, ChevronDown, Zap, Hourglass } from 'lucide-react';
 import './TakeQuizPage.css';
 
 const hotTopics = ['JavaScript', 'Python', 'React', 'Node.js', 'Data Structures', 'Algorithms'];
@@ -10,18 +10,37 @@ export default function TakeQuizPage() {
     const location = useLocation();
     const trendingTopic = location.state?.trendingTopic || '';
     const topicTransition = Boolean(location.state?.topicTransition && trendingTopic);
+    const backgroundTopics = Array.isArray(location.state?.backgroundTopics)
+        ? location.state.backgroundTopics
+        : [];
     const [topic, setTopic] = useState(trendingTopic);
     const [numQuestions, setNumQuestions] = useState(10);
     const [difficulty, setDifficulty] = useState('Medium');
     const [totalTime, setTotalTime] = useState(1); // Default 1 minute
     const [randomTopic, setRandomTopic] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const topicInputRef = useRef(null);
+    const transitionTimer = useRef(null);
 
     useEffect(() => {
         setRandomTopic(hotTopics[Math.floor(Math.random() * hotTopics.length)]);
     }, []);
+
+    useEffect(() => () => window.clearTimeout(transitionTimer.current), []);
+
+    useEffect(() => {
+        if (!topicTransition) return undefined;
+
+        const focusFrame = requestAnimationFrame(() => {
+            topicInputRef.current?.focus({ preventScroll: true });
+            topicInputRef.current?.setSelectionRange(topic.length, topic.length);
+        });
+
+        return () => cancelAnimationFrame(focusFrame);
+    }, [topic, topicTransition]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -65,16 +84,25 @@ export default function TakeQuizPage() {
             } else {
               questions = data.data.questions || data.data;
             }
+
+                        setIsTransitioning(true);
+                        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        await new Promise(resolve => {
+                            transitionTimer.current = window.setTimeout(resolve, reducedMotion ? 0 : 1280);
+                        });
         
             navigate('/questions', {
               state: {
                 questions,
                 topic: selectedTopic,
+                                topicTransition: topicTransition || backgroundTopics.length > 0,
+                                backgroundTopics,
                 numQuestions,
                 difficulty,
                 totalTime,
                 fromCache: data.cached
-              }
+                            },
+                            viewTransition: true
             });
           } catch (err) {
             setError(err.message.includes('API key') 
@@ -87,18 +115,36 @@ export default function TakeQuizPage() {
         };
 
     return (
-        <div className={`take-quiz-stage${topicTransition ? ' take-quiz-stage-transition' : ''}`}>
-        <div className="take-quiz-card max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <BookOpen className="text-blue-500" /> Take a Quiz
+                <div className={`take-quiz-stage${topicTransition ? ' take-quiz-stage-transition' : ''}${isTransitioning ? ' take-quiz-stage-launching' : ''}`}>
+                {backgroundTopics.length > 0 && (
+                    <div className="take-quiz-topic-backdrop" aria-hidden="true">
+                        {backgroundTopics.map((backgroundTopic, index) => (
+                            <span
+                                key={`${backgroundTopic}-${index}`}
+                                style={{
+                                    '--quiz-topic-index': index,
+                                    '--quiz-topic-x': `${10 + ((index * 37) % 80)}%`,
+                                    '--quiz-topic-y': `${12 + ((index * 23) % 76)}%`
+                                }}
+                            >
+                                {backgroundTopic}
+                            </span>
+                        ))}
+                    </div>
+                )}
+                <div className={`take-quiz-card${topicTransition ? ' take-quiz-card-arrive' : ''}`}>
+            <h2 className="quiz-setup-title">
+                <span className="quiz-setup-icon"><BookOpen size={19} /></span> Take a Quiz
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
+            <form onSubmit={handleSubmit} className="quiz-setup-form">
+                <div className="quiz-field">
+                    <label htmlFor="quiz-topic-input">Enter Topic</label>
                     <input
                         type="text"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        id="quiz-topic-input"
+                        ref={topicInputRef}
+                        className="quiz-field-control"
                         placeholder={`Try "${randomTopic}"`}
                         value={topic}
                         style={topicTransition ? { viewTransitionName: 'quiz-topic' } : undefined}
@@ -108,11 +154,12 @@ export default function TakeQuizPage() {
                     />
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Number of Questions</label>
-                    <div className="relative">
+                <div className="quiz-field">
+                    <label htmlFor="quiz-question-count">Number of Questions</label>
+                    <div className="quiz-select-wrap">
                         <select
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                            id="quiz-question-count"
+                            className="quiz-field-control quiz-select"
                             value={numQuestions}
                             onChange={(e) => setNumQuestions(Number(e.target.value))}
                         >
@@ -120,15 +167,16 @@ export default function TakeQuizPage() {
                                 <option key={num} value={num}>{num}</option>
                             ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                        <ChevronDown className="quiz-select-icon" size={18} />
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty Level</label>
-                    <div className="relative">
+                <div className="quiz-field">
+                    <label htmlFor="quiz-difficulty">Difficulty Level</label>
+                    <div className="quiz-select-wrap">
                         <select
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                            id="quiz-difficulty"
+                            className="quiz-field-control quiz-select"
                             value={difficulty}
                             onChange={(e) => setDifficulty(e.target.value)}
                         >
@@ -136,23 +184,22 @@ export default function TakeQuizPage() {
                                 <option key={level} value={level}>{level}</option>
                             ))}
                         </select>
-                        <ChevronDown className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
+                        <ChevronDown className="quiz-select-icon" size={18} />
                     </div>
                 </div>
 
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <div className="flex items-center gap-3 mb-2">
-                        <Hourglass className="text-blue-600" size={20} />
-                        <h3 className="text-lg font-semibold text-blue-800">Quiz Timer</h3>
+                <section className="quiz-timer-panel">
+                    <div className="quiz-timer-heading">
+                        <span className="quiz-timer-icon"><Hourglass size={17} /></span>
+                        <h3>Quiz Timer</h3>
                     </div>
-                    <div className="space-y-3">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Total quiz duration
-                            </label>
-                            <div className="relative">
+                    <div className="quiz-timer-content">
+                        <div className="quiz-field">
+                            <label htmlFor="quiz-duration">Total quiz duration</label>
+                            <div className="quiz-select-wrap">
                                 <select
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                                    id="quiz-duration"
+                                    className="quiz-field-control quiz-select"
                                     value={totalTime}
                                     onChange={(e) => setTotalTime(Number(e.target.value))}
                                 >
@@ -162,30 +209,28 @@ export default function TakeQuizPage() {
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
+                                <ChevronDown className="quiz-select-icon" size={18} />
                             </div>
                         </div>
-                        <p className="text-sm text-gray-500">
-                            The quiz will automatically submit when time runs out.
-                        </p>
+                        <p className="quiz-timer-note">The quiz will automatically submit when time runs out.</p>
                     </div>
-                </div>
+                </section>
 
                 {isLoading && (
-                    <div className="flex items-center justify-center gap-2 text-blue-500">
-                        <Hourglass className="animate-spin" />
+                    <div className="quiz-loading">
+                        <Hourglass className="animate-spin" size={17} />
                         <span>Generating your quiz...</span>
                     </div>
                 )}
 
                 {error && (
-                    <div className="text-red-500 text-sm">{error}</div>
+                    <div className="quiz-error" role="alert">{error}</div>
                 )}
 
                 <button
                     type="submit"
-                    className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                    disabled={isLoading}
+                    className="quiz-submit-button"
+                        disabled={isLoading || isTransitioning}
                 >
                     {isLoading ? 'Generating...' : (
                         <>

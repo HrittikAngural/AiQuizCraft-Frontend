@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -25,13 +25,29 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Context
 import { AuthProvider } from './context/AuthContext';
 
-function App() {
+function AppLayout() {
+  const location = useLocation();
+  const isTakingQuiz = location.pathname === '/questions';
+  const isQuizSetup = location.pathname === '/take-quiz';
+  const [showQuizFooter, setShowQuizFooter] = useState(false);
+
+  useEffect(() => {
+    if (!isQuizSetup) {
+      setShowQuizFooter(false);
+      return undefined;
+    }
+
+    window.scrollTo(0, 0);
+    setShowQuizFooter(false);
+    const revealFooterOnScroll = () => setShowQuizFooter(window.scrollY > 32);
+    window.addEventListener('scroll', revealFooterOnScroll, { passive: true });
+    return () => window.removeEventListener('scroll', revealFooterOnScroll);
+  }, [isQuizSetup]);
+
   return (
-    <Router>
-      <AuthProvider>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-grow pb-8">
+    <div className="flex min-h-screen flex-col">
+      {!isTakingQuiz && <Navbar />}
+      <main className={`flex-grow${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}`}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/loading" element={<LoadingPage />} />
@@ -88,11 +104,18 @@ function App() {
                 </ProtectedRoute>
               } />
             </Routes>
+      </main>
+      {!isTakingQuiz && (!isQuizSetup || showQuizFooter) && <Footer />}
+      <ToastContainer position="top-right" autoClose={3000} />
+    </div>
+  );
+}
 
-          </main>
-          <Footer />
-        </div>
-        <ToastContainer position="top-right" autoClose={3000} />
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppLayout />
       </AuthProvider>
     </Router>
   );

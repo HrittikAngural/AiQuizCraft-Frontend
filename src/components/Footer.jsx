@@ -1,41 +1,38 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import './Footer.css';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-800 text-white py-6">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          {/* Logo and copyright */}
-          <div className="mb-4 md:mb-0">
-            <h3 className="text-lg font-semibold">AIQuizCraft</h3>
-            <p className="text-gray-300 text-sm">
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div className="site-footer-brand">
+            <h3>AIQuizCraft</h3>
+            <p>
               © {new Date().getFullYear()} All rights reserved
             </p>
-          </div>
+        </div>
 
-          {/* Quick links */}
-          <div className="flex space-x-6">
+        <nav className="site-footer-links" aria-label="Footer navigation">
             <Link 
               to="/" 
-              className="text-gray-300 hover:text-white transition-colors text-sm"
+              className="site-footer-link"
             >
               Home
             </Link>
             <Link 
               to="/dashboard" 
-              className="text-gray-300 hover:text-white transition-colors text-sm"
+              className="site-footer-link"
             >
               Dashboard
             </Link>
             <Link 
               to="/take-quiz" 
-              className="text-gray-300 hover:text-white transition-colors text-sm"
+              className="site-footer-link"
             >
               Take Quiz
             </Link>
-          </div>
-        </div>
+        </nav>
       </div>
     </footer>
   );

@@ -1,16 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import './QuestionsPage.css';
 
 export default function QuestionsPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { questions, totalTime, topic } = state;
+  const questions = Array.isArray(state?.questions) ? state.questions : [];
+  const totalTime = Number(state?.totalTime) || 1;
+  const topic = state?.topic || 'Quiz';
+  const topicTransition = Boolean(state?.topicTransition);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [timeLeft, setTimeLeft] = useState(totalTime * 60); // Convert to seconds
   const [startTime] = useState(Date.now()); // Track quiz start time
+  const hasSubmitted = useRef(false);
+  const submitQuizRef = useRef(null);
+
+  useEffect(() => {
+    if (questions.length === 0) {
+      navigate('/take-quiz', { replace: true });
+    }
+  }, [navigate, questions.length]);
 
   const handleOptionSelect = (optionIndex) => {
     setSelectedOptions(prev => ({
@@ -20,18 +32,17 @@ export default function QuestionsPage() {
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-    }
+    setCurrentQuestionIndex(index => Math.min(index + 1, questions.length - 1));
   };
 
   const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
-    }
+    setCurrentQuestionIndex(index => Math.max(index - 1, 0));
   };
 
   const handleSubmit = () => {
+    if (hasSubmitted.current) return;
+
+    hasSubmitted.current = true;
     const endTime = Date.now();
     const timeTakenInSeconds = Math.floor((endTime - startTime) / 1000);
     
@@ -61,13 +72,15 @@ export default function QuestionsPage() {
       }
     });
   };
+  submitQuizRef.current = handleSubmit;
 
   useEffect(() => {
+    if (questions.length === 0 || hasSubmitted.current) return undefined;
+
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmit();
           return 0;
         }
         return prev - 1;
@@ -75,7 +88,32 @@ export default function QuestionsPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [selectedOptions]);
+  }, [questions.length]);
+
+  useEffect(() => {
+    if (timeLeft === 0) submitQuizRef.current?.();
+  }, [timeLeft]);
+
+  useEffect(() => {
+    if (questions.length === 0) return undefined;
+
+    const keepQuizHistoryEntry = () => {
+      window.history.pushState(window.history.state, '', window.location.href);
+    };
+    const preventLeavingQuiz = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    keepQuizHistoryEntry();
+    window.addEventListener('popstate', keepQuizHistoryEntry);
+    window.addEventListener('beforeunload', preventLeavingQuiz);
+
+    return () => {
+      window.removeEventListener('popstate', keepQuizHistoryEntry);
+      window.removeEventListener('beforeunload', preventLeavingQuiz);
+    };
+  }, [questions.length]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -83,69 +121,77 @@ export default function QuestionsPage() {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  if (questions.length === 0) return null;
+
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl relative">
-      <div className="fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg">
-        Time left: {formatTime(timeLeft)}
-      </div>
-
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">{topic} Quiz</h2>
-        <span className="text-sm text-gray-500">
-          Question {currentQuestionIndex + 1} of {questions.length}
-        </span>
-      </div>
-
-      <div className="mb-6">
-        <h3 className="text-lg font-medium mb-4">
-          {questions[currentQuestionIndex].question}
-        </h3>
-        
-        <div className="space-y-3">
-          {questions[currentQuestionIndex].options.map((option, index) => (
-            <button
-              key={index}
-              onClick={() => handleOptionSelect(index)}
-              className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                selectedOptions[currentQuestionIndex] === index
-                  ? 'bg-blue-100 border-blue-400'
-                  : 'hover:bg-gray-50 border-gray-200'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+    <div className="questions-page">
+      <section className="questions-card" aria-label={`${topic} quiz`}>
+        <div className="questions-topline">
+          <p
+            className="questions-topic"
+            style={topicTransition ? { viewTransitionName: 'quiz-topic' } : undefined}
+          >
+            {topic} Quiz
+          </p>
+          <p className="questions-timer" aria-live="off">Time left: {formatTime(timeLeft)}</p>
         </div>
-      </div>
 
-      <div className="flex justify-between">
-        <button
-          onClick={handlePrevious}
-          disabled={currentQuestionIndex === 0}
-          className="flex items-center px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50"
-        >
-          <ChevronLeft className="mr-1" size={18} />
-          Previous
-        </button>
+        <div className="questions-progress-row">
+          <h2>Question {currentQuestionIndex + 1}</h2>
+          <span>{currentQuestionIndex + 1} of {questions.length}</span>
+        </div>
+        <div className="questions-progress-track" aria-hidden="true">
+          <div style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }} />
+        </div>
 
-        {currentQuestionIndex < questions.length - 1 ? (
+        <div className="questions-content" key={currentQuestionIndex}>
+          <h3 className="questions-prompt">{questions[currentQuestionIndex].question}</h3>
+          <div className="questions-options">
+            {questions[currentQuestionIndex].options.map((option, index) => {
+              const isSelected = selectedOptions[currentQuestionIndex] === index;
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => handleOptionSelect(index)}
+                  className={`question-option${isSelected ? ' question-option-selected' : ''}`}
+                >
+                  <span className="question-option-marker">{String.fromCharCode(65 + index)}</span>
+                  <span>{option}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="questions-navigation">
           <button
-            onClick={handleNext}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg"
+            type="button"
+            onClick={handlePrevious}
+            disabled={currentQuestionIndex === 0}
+            className="question-nav-button question-nav-previous"
           >
-            Next
-            <ChevronRight className="ml-1" size={18} />
+            <ChevronLeft size={18} /> Previous
           </button>
-        ) : (
-          <button
-            onClick={handleSubmit}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg"
-          >
-            <CheckCircle className="mr-1" size={18} />
-            Finish Quiz
-          </button>
-        )}
-      </div>
+
+          {!isLastQuestion ? (
+            <button type="button" onClick={handleNext} className="question-nav-button question-nav-next">
+              Next <ChevronRight size={18} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSubmit()}
+              className="question-nav-button question-nav-finish"
+            >
+              <CheckCircle size={18} /> Finish Quiz
+            </button>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
