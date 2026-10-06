@@ -70,8 +70,22 @@ export default function TakeQuizPage() {
               })
             });
         
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Quiz generation failed');
+                        const responseBody = await response.text();
+                        let data = {};
+                        if (responseBody) {
+                            try {
+                                data = JSON.parse(responseBody);
+                            } catch {
+                                const contentType = response.headers.get('content-type') || '';
+                                data = { message: contentType.includes('text/html') ? '' : responseBody.trim() };
+                            }
+                        }
+
+                        if (!response.ok) {
+                            const serverMessage = [data.message, data.error?.message, data.error, data.detail]
+                                .find(message => typeof message === 'string' && message.trim());
+                            throw new Error(serverMessage || `Quiz generation failed (${response.status})`);
+                        }
         
             // Handle raw JSON or markdown-cleaned responses
             let questions;
@@ -105,9 +119,7 @@ export default function TakeQuizPage() {
                             viewTransition: true
             });
           } catch (err) {
-            setError(err.message.includes('API key') 
-                            ? 'Please configure a valid Groq API key in the backend'
-              : err.message);
+                        setError(err?.message || 'Quiz generation failed. Please try again.');
             console.error('Quiz submission error:', err);
           } finally {
             setIsLoading(false);
