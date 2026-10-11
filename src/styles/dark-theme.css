@@ -471,7 +471,7 @@ html[data-theme="dark"] .learning-dashboard .dashboard-loading {
 }
 
 html[data-theme="dark"] .result-page {
-  background: #11161c;
+  background: transparent;
   color: #e3e9e4;
 }
 
