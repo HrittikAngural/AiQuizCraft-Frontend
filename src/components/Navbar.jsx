@@ -1,17 +1,104 @@
-import React, { useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, User, BrainCircuit } from 'lucide-react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, LogOut, User, BrainCircuit, ChevronDown, Moon, Sun } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import './Navbar.css';
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = React.useState(false);
+const Navbar = ({ theme, onToggleTheme }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const desktopUserMenuRef = useRef(null);
+  const mobileUserMenuRef = useRef(null);
 
   const handleLogout = () => {
+    setIsUserMenuOpen(false);
+    setIsOpen(false);
     logout();
     navigate('/');
+  };
+
+  useEffect(() => {
+    setIsOpen(false);
+    setIsUserMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return undefined;
+
+    const closeOnOutsideClick = (event) => {
+      if (
+        !desktopUserMenuRef.current?.contains(event.target) &&
+        !mobileUserMenuRef.current?.contains(event.target)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isUserMenuOpen]);
+
+  const renderUserMenuButton = (mobile = false) => (
+    <div
+      className={`site-navbar-user-menu${isUserMenuOpen ? ' site-navbar-user-menu-open' : ''}${mobile ? ' site-navbar-user-menu-mobile' : ''}`}
+      ref={mobile ? mobileUserMenuRef : desktopUserMenuRef}
+    >
+      <button
+        type="button"
+        className={`site-navbar-user site-navbar-user-trigger${mobile ? ' site-navbar-mobile-link' : ''}`}
+        onClick={() => setIsUserMenuOpen((open) => !open)}
+        aria-expanded={isUserMenuOpen}
+        aria-haspopup="true"
+        aria-label={`Account menu for ${user?.name || 'your account'}`}
+      >
+        <User size={16} aria-hidden="true" />
+        <span>{user?.name}</span>
+        <ChevronDown
+          size={14}
+          className={isUserMenuOpen ? 'site-navbar-user-chevron-open' : ''}
+          aria-hidden="true"
+        />
+      </button>
+      {isUserMenuOpen && (
+        <div className="site-navbar-user-dropdown">
+          <button
+            type="button"
+            className="site-navbar-user-logout"
+            onClick={handleLogout}
+          >
+            <LogOut size={15} aria-hidden="true" />
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderThemeButton = (mobile = false) => {
+    const isDark = theme === 'dark';
+    const ThemeIcon = isDark ? Sun : Moon;
+
+    return (
+      <button
+        type="button"
+        className={`site-navbar-theme-toggle${mobile ? ' site-navbar-theme-toggle-mobile' : ''}`}
+        onClick={onToggleTheme}
+        aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      >
+        <ThemeIcon size={17} aria-hidden="true" />
+      </button>
+    );
   };
 
   return (
@@ -46,20 +133,12 @@ const Navbar = () => {
                   >
                     Dashboard
                   </Link>
-                  <div className="site-navbar-user flex items-center px-3 py-2 text-sm font-medium">
-                    <User size={16} className="mr-2" />
-                    {user?.name}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="site-navbar-action site-navbar-logout flex items-center px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    <LogOut size={16} className="mr-1" />
-                    Logout
-                  </button>
+                  {renderUserMenuButton()}
+                  {renderThemeButton()}
                 </>
               ) : (
                 <>
+                  {renderThemeButton()}
                   <Link
                     to="/login"
                     className="site-navbar-link px-3 py-2 rounded-md text-sm font-medium"
@@ -117,23 +196,14 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <div className="site-navbar-user flex items-center px-3 py-2 text-base font-medium">
-                  <User size={16} className="mr-2" />
-                  {user?.name}
+                <div className="site-navbar-mobile-account">
+                  {renderUserMenuButton(true)}
+                  {renderThemeButton(true)}
                 </div>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsOpen(false);
-                  }}
-                  className="site-navbar-mobile-action site-navbar-logout flex w-full items-center px-3 py-2 rounded-md text-base font-medium"
-                >
-                  <LogOut size={16} className="mr-1" />
-                  Logout
-                </button>
               </>
             ) : (
               <>
+                {renderThemeButton(true)}
                 <Link
                   to="/login"
                   className="site-navbar-mobile-link block px-3 py-2 rounded-md text-base font-medium"

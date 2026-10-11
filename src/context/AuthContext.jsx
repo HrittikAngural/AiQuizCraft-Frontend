@@ -1,12 +1,36 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import api from '../utils/api';
 
 export const AuthContext = createContext();
 
+const USER_STORAGE_KEY = 'quizcraft-user';
+
+const readSavedUser = () => {
+  try {
+    if (!localStorage.getItem('token')) return null;
+
+    const savedUser = localStorage.getItem(USER_STORAGE_KEY);
+    if (!savedUser) return null;
+
+    const parsedUser = JSON.parse(savedUser);
+    return parsedUser && typeof parsedUser === 'object' ? parsedUser : null;
+  } catch (error) {
+    console.error('Could not restore the saved user profile:', error);
+    return null;
+  }
+};
+
+const persistUser = (user) => {
+  if (user) {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(readSavedUser);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,10 +45,28 @@ export const AuthProvider = ({ children }) => {
           const { data } = await api.get('/api/auth/profile');
           
           setUser(data.user);
+          persistUser(data.user);
         }
       } catch (error) {
-        localStorage.removeItem('token');
-        delete api.defaults.headers.common['Authorization'];
+        const status = error.response?.status;
+        if (status === 401 || status === 403 || status === 404) {
+          localStorage.removeItem('token');
+          delete api.defaults.headers.common['Authorization'];
+          persistUser(null);
+          setUser(null);
+        } else {
+          const cachedUser = localStorage.getItem(USER_STORAGE_KEY);
+          if (cachedUser) {
+            try {
+              setUser(JSON.parse(cachedUser));
+            } catch (storageError) {
+              console.error('Could not restore the saved user profile:', storageError);
+              persistUser(null);
+            }
+          } else {
+            console.error('Could not verify the saved login:', error);
+          }
+        }
       }
       
       setLoading(false);
@@ -44,6 +86,7 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
       
       setUser(data.user);
+      persistUser(data.user);
       toast.success('Registration successful!');
       
       return true;
@@ -67,6 +110,7 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
       
       setUser(data.user);
+      persistUser(data.user);
       toast.success('Login successful!');
       
       return true;
@@ -79,9 +123,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (idToken) => {
+    try {
+      const { data } = await api.post('/api/auth/google', { idToken });
+
+      localStorage.setItem('token', data.token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+      setUser(data.user);
+      persistUser(data.user);
+      toast.success('Signed in with Google successfully!');
+      return true;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Google sign-in failed. Please try again.';
+      toast.error(message);
+      return false;
+    }
+  };
+
   // Logout user
   const logout = () => {
     localStorage.removeItem('token');
+    const userId = user?.id || user?._id;
+    if (userId) {
+      sessionStorage.removeItem(`quizcraft-dashboard-${userId}`);
+    }
+    persistUser(null);
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
     toast.success('Logged out successfully');
@@ -94,6 +160,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         register,
         login,
+        loginWithGoogle,
         logout,
         isAuthenticated: !!user,
       }}

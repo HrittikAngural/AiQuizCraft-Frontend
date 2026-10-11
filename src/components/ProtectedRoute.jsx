@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import Loader from './ui/Loader';
+import '../pages/DashboardPage.css';
 
 const TakeQuizLoadingCard = () => (
   <div className="take-quiz-stage take-quiz-loading-stage">
@@ -35,7 +36,16 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useContext(AuthContext);
   const location = useLocation();
 
-  if (loading) {
+  if (loading && !isAuthenticated) {
+    if (location.pathname === '/dashboard') {
+      return (
+        <div className="dashboard-loading" role="status" aria-live="polite">
+          <span className="dashboard-loading-indicator" aria-hidden="true" />
+          <span>Restoring your learning dashboard…</span>
+        </div>
+      );
+    }
+
     if (location.pathname === '/take-quiz') {
       return <TakeQuizLoadingCard />;
     }

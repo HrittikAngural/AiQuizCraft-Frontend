@@ -1,0 +1,64 @@
+.google-auth-button {
+  position: relative;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.google-auth-button > div {
+  max-width: 100%;
+}
+
+.google-auth-button-loading > div {
+  pointer-events: none;
+  opacity: 0.42;
+}
+
+.google-auth-loading {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 7%);
+}
+
+.google-auth-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #4285f4;
+  border-radius: 50%;
+  animation: google-auth-spin 700ms linear infinite;
+}
+
+.google-auth-configuration {
+  margin: 0;
+  color: #7c5b19;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.google-auth-configuration code {
+  font-size: 11px;
+}
+
+@keyframes google-auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .google-auth-spinner {
+    animation-duration: 2s;
+  }
+}

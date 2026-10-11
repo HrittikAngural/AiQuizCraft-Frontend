@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
@@ -82,12 +83,19 @@ const RegisterPage = () => {
           </Button>
         </form>
 
+        <div className="my-5 flex items-center gap-3 text-xs text-gray-400" aria-hidden="true">
+          <span className="h-px flex-1 bg-gray-200" />
+          <span>OR</span>
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+        <GoogleSignInButton onAuthenticated={() => navigate('/')} />
+
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <a href="/login" className="text-indigo-600 hover:underline">
+            <Link to="/login" className="text-indigo-600 hover:underline">
               Sign in here
-            </a>
+            </Link>
           </p>
         </div>
       </div>

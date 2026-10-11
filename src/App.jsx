@@ -21,6 +21,7 @@ import RewardsPage from './pages/RewardsPage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import './styles/dark-theme.css';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -29,7 +30,27 @@ function AppLayout() {
   const location = useLocation();
   const isTakingQuiz = location.pathname === '/questions';
   const isQuizSetup = location.pathname === '/take-quiz';
+  const [theme, setTheme] = useState(() => (
+    document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
+  ));
   const [showQuizFooter, setShowQuizFooter] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try {
+      localStorage.setItem('aiquizcraft-theme', theme);
+    } catch (error) {
+      console.error('Could not save the selected color theme:', error);
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    root.classList.add('theme-transition');
+    window.setTimeout(() => root.classList.remove('theme-transition'), 450);
+    setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark');
+  };
 
   useEffect(() => {
     if (!isQuizSetup) {
@@ -46,7 +67,7 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!isTakingQuiz && <Navbar />}
+      {!isTakingQuiz && <Navbar theme={theme} onToggleTheme={toggleTheme} />}
       <main className={`flex-grow${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}`}>
             <Routes>
               <Route path="/" element={<HomePage />} />

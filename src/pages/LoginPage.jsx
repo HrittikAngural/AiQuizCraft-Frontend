@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -10,19 +11,23 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const completeSignIn = () => {
+    const from = location.state?.from;
+    if (from?.pathname) {
+      navigate(
+        { pathname: from.pathname, search: from.search, hash: from.hash },
+        { replace: true, state: from.state }
+      );
+    } else {
+      navigate('/');
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     const success = await login({ email, password });
     if (success) {
-      const from = location.state?.from;
-      if (from?.pathname) {
-        navigate(
-          { pathname: from.pathname, search: from.search, hash: from.hash },
-          { replace: true, state: from.state }
-        );
-      } else {
-        navigate('/');
-      }
+      completeSignIn();
     }
   };
 
@@ -74,12 +79,19 @@ const LoginPage = () => {
           </Button>
         </form>
 
+        <div className="my-5 flex items-center gap-3 text-xs text-gray-400" aria-hidden="true">
+          <span className="h-px flex-1 bg-gray-200" />
+          <span>OR</span>
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
+        <GoogleSignInButton onAuthenticated={completeSignIn} />
+
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="/register" className="text-indigo-600 hover:underline">
+            <Link to="/register" className="text-indigo-600 hover:underline">
               Register here
-            </a>
+            </Link>
           </p>
         </div>
       </div>

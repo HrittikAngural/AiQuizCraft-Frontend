@@ -54,6 +54,7 @@ export default function TakeQuizPage() {
                           - question: string
                           - options: string[]
                           - correctAnswer: number (index of correct option)
+                          - explanation: a concise, accurate explanation of why the correct answer is right
                           Difficulty: ${difficulty}`;
         
             const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/quiz/generate`, {

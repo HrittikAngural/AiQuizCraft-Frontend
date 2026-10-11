@@ -7,7 +7,16 @@ const PerformanceAnalysisPage = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme || 'light');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setTheme(document.documentElement.dataset.theme || 'light');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -51,6 +60,8 @@ const PerformanceAnalysisPage = () => {
       }
 
       const ctx = chartRef.current.getContext('2d');
+      const chartTextColor = theme === 'dark' ? '#d5dde5' : '#4b5563';
+      const chartGridColor = theme === 'dark' ? '#35414c' : '#e5e7eb';
       chartInstance.current = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -68,6 +79,7 @@ const PerformanceAnalysisPage = () => {
             title: {
               display: true,
               text: 'Performance Analysis',
+              color: chartTextColor,
               font: {
                 size: 24,
                 weight: 'bold'
@@ -78,15 +90,21 @@ const PerformanceAnalysisPage = () => {
             y: {
               beginAtZero: true,
               max: 100,
+              ticks: { color: chartTextColor },
+              grid: { color: chartGridColor },
               title: {
                 display: true,
-                text: 'Accuracy (%)'
+                text: 'Accuracy (%)',
+                color: chartTextColor,
               }
             },
             x: {
+              ticks: { color: chartTextColor },
+              grid: { color: chartGridColor },
               title: {
                 display: true,
-                text: 'Topics'
+                text: 'Topics',
+                color: chartTextColor,
               }
             }
           }
@@ -101,7 +119,7 @@ const PerformanceAnalysisPage = () => {
         chartInstance.current.destroy();
       }
     };
-  }, []);
+  }, [navigate, theme]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
