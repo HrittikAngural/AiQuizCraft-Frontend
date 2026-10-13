@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Pages
-import HomePage from './pages/HomePage';
-import LoadingPage from './pages/LoadingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
-import TakeQuizPage from './pages/TakeQuizPage';
-import QuestionsPage from './pages/QuestionsPage';
-import ResultPage from './pages/ResultPage';
-import PerformanceAnalysisPage from './pages/PerformanceAnalysisPage';
-import HistoryPage from './pages/HistoryPage';
-import RewardsPage from './pages/RewardsPage';
+const HomePage = lazy(() => import('./pages/HomePage'));
+const LoadingPage = lazy(() => import('./pages/LoadingPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const TakeQuizPage = lazy(() => import('./pages/TakeQuizPage'));
+const QuestionsPage = lazy(() => import('./pages/QuestionsPage'));
+const ResultPage = lazy(() => import('./pages/ResultPage'));
+const PerformanceAnalysisPage = lazy(() => import('./pages/PerformanceAnalysisPage'));
+const HistoryPage = lazy(() => import('./pages/HistoryPage'));
+const RewardsPage = lazy(() => import('./pages/RewardsPage'));
+const SubjectExplorerPage = lazy(() => import('./pages/SubjectExplorerPage'));
+const SubjectTopicsPage = lazy(() => import('./pages/SubjectTopicsPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'));
+const AnswerReviewPage = lazy(() => import('./pages/AnswerReviewPage'));
 
 
 // Components
@@ -69,8 +73,11 @@ function AppLayout() {
     <div className="flex min-h-screen flex-col">
       {!isTakingQuiz && <Navbar theme={theme} onToggleTheme={toggleTheme} />}
       <main className={`flex-grow${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}`}>
+        <Suspense fallback={<div className="flex min-h-[30vh] items-center justify-center text-sm text-slate-500" role="status">Loading page…</div>}>
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/subjects" element={<SubjectExplorerPage />} />
+              <Route path="/subjects/:subjectSlug" element={<SubjectTopicsPage />} />
               <Route path="/loading" element={<LoadingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
@@ -104,6 +111,22 @@ function AppLayout() {
                 }
               />
               <Route
+                path="/answer-review"
+                element={
+                  <ProtectedRoute>
+                    <AnswerReviewPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/leaderboard"
+                element={
+                  <ProtectedRoute>
+                    <LeaderboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/performance-analysis"
                 element={
                   <ProtectedRoute>
@@ -125,6 +148,7 @@ function AppLayout() {
                 </ProtectedRoute>
               } />
             </Routes>
+        </Suspense>
       </main>
       {!isTakingQuiz && (!isQuizSetup || showQuizFooter) && <Footer />}
       <ToastContainer position="top-right" autoClose={3000} />

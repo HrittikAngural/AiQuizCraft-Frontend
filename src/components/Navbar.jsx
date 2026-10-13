@@ -1,8 +1,47 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, User, BrainCircuit, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Menu, X, LogOut, BrainCircuit, ChevronDown, Moon, Sun, Trophy } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
+import api from '../utils/api';
 import './Navbar.css';
+
+const getInitials = (name) => String(name || 'User')
+  .trim()
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((part) => part[0]?.toUpperCase())
+  .join('');
+
+function UserAvatar({ user, large = false }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const photoUrl = typeof user?.photoUrl === 'string' && /^https:\/\//i.test(user.photoUrl)
+    ? user.photoUrl
+    : '';
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [photoUrl]);
+
+  const imageSource = photoUrl &&
+    !imageFailed
+    ? photoUrl
+    : '';
+
+  return (
+    <span className={`site-navbar-avatar${large ? ' site-navbar-avatar-large' : ''}`} aria-hidden="true">
+      {imageSource ? (
+        <img
+          src={imageSource}
+          alt=""
+          referrerPolicy="no-referrer"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span>{getInitials(user?.name)}</span>
+      )}
+    </span>
+  );
+}
 
 const Navbar = ({ theme, onToggleTheme }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +51,38 @@ const Navbar = ({ theme, onToggleTheme }) => {
   const location = useLocation();
   const desktopUserMenuRef = useRef(null);
   const mobileUserMenuRef = useRef(null);
+  const [position, setPosition] = useState(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setPosition(null);
+      return undefined;
+    }
+
+    let active = true;
+    const fetchPosition = () => {
+      api.get('/api/results/leaderboard?period=all')
+        .then(({ data }) => {
+          if (active) {
+            const rank = Number(data.currentUser?.rank);
+            setPosition(Number.isInteger(rank) && rank > 0 ? rank : null);
+          }
+        })
+        .catch((error) => {
+          if (active) {
+            setPosition(null);
+            console.error('Could not load the leaderboard position for the navigation bar:', error);
+          }
+        });
+    };
+    fetchPosition();
+    window.addEventListener('quiz-result-saved', fetchPosition);
+
+    return () => {
+      active = false;
+      window.removeEventListener('quiz-result-saved', fetchPosition);
+    };
+  }, [isAuthenticated, user?.id, user?._id]);
 
   const handleLogout = () => {
     setIsUserMenuOpen(false);
@@ -61,8 +132,10 @@ const Navbar = ({ theme, onToggleTheme }) => {
         aria-haspopup="true"
         aria-label={`Account menu for ${user?.name || 'your account'}`}
       >
-        <User size={16} aria-hidden="true" />
-        <span>{user?.name}</span>
+        <UserAvatar user={user} />
+        <span className="site-navbar-user-copy">
+          <strong>{user?.name}</strong>
+        </span>
         <ChevronDown
           size={14}
           className={isUserMenuOpen ? 'site-navbar-user-chevron-open' : ''}
@@ -71,6 +144,12 @@ const Navbar = ({ theme, onToggleTheme }) => {
       </button>
       {isUserMenuOpen && (
         <div className="site-navbar-user-dropdown">
+          <div className="site-navbar-user-profile">
+            <UserAvatar user={user} large />
+            <span>
+              <strong>{user?.name}</strong>
+            </span>
+          </div>
           <button
             type="button"
             className="site-navbar-user-logout"
@@ -101,6 +180,19 @@ const Navbar = ({ theme, onToggleTheme }) => {
     );
   };
 
+  const renderPositionLink = (mobile = false) => (
+    <Link
+      to="/leaderboard"
+      className={`site-navbar-position-link${mobile ? ' site-navbar-position-link-mobile' : ''}${location.pathname === '/leaderboard' ? ' site-navbar-position-link-active' : ''}`}
+      aria-label={position ? `Your all-time leaderboard position is ${position}` : 'View the leaderboard; you are not ranked yet'}
+      title={position ? `All-time position: #${position}` : 'Not ranked yet'}
+      onClick={mobile ? () => setIsOpen(false) : undefined}
+    >
+      <Trophy size={22} aria-hidden="true" />
+      <span aria-hidden="true">{position ?? '—'}</span>
+    </Link>
+  );
+
   return (
     <nav className={`site-navbar${isOpen ? ' site-navbar-open' : ''}`} aria-label="Main navigation">
       <div className="site-navbar-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -111,17 +203,23 @@ const Navbar = ({ theme, onToggleTheme }) => {
               <span className="site-navbar-brand-name font-bold text-xl">AIQuizCraft</span>
             </Link>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <div className="site-navbar-links ml-10 flex items-baseline space-x-2">
               <Link
                 to="/"
-                className="site-navbar-link px-3 py-2 rounded-md text-sm font-medium"
+                className={`site-navbar-link px-3 py-2 rounded-md text-sm font-medium${location.pathname === '/' ? ' site-navbar-link-active' : ''}`}
               >
                 Home
               </Link>
               <Link
+                to="/subjects"
+                className={`site-navbar-link px-3 py-2 rounded-md text-sm font-medium${location.pathname.startsWith('/subjects') ? ' site-navbar-link-active' : ''}`}
+              >
+                Subjects
+              </Link>
+              <Link
                 to="/take-quiz"
-                className="site-navbar-link px-3 py-2 rounded-md text-sm font-medium"
+                className={`site-navbar-link px-3 py-2 rounded-md text-sm font-medium${location.pathname === '/take-quiz' ? ' site-navbar-link-active' : ''}`}
               >
                 Quiz
               </Link>
@@ -131,8 +229,9 @@ const Navbar = ({ theme, onToggleTheme }) => {
                     to="/dashboard"
                     className="site-navbar-link px-3 py-2 rounded-md text-sm font-medium"
                   >
-                    Dashboard
+                    My Progress
                   </Link>
+                  {renderPositionLink()}
                   {renderUserMenuButton()}
                   {renderThemeButton()}
                 </>
@@ -145,17 +244,11 @@ const Navbar = ({ theme, onToggleTheme }) => {
                   >
                     Login
                   </Link>
-                  <Link
-                    to="/register"
-                    className="site-navbar-action px-3 py-2 rounded-md text-sm font-medium"
-                  >
-                    Register
-                  </Link>
                 </>
               )}
             </div>
           </div>
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="site-navbar-menu-button inline-flex items-center justify-center p-2 rounded-md focus:outline-none"
@@ -163,15 +256,24 @@ const Navbar = ({ theme, onToggleTheme }) => {
               aria-expanded={isOpen}
               aria-controls="mobile-navigation"
             >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
+              <span className={`site-navbar-menu-icon${isOpen ? ' site-navbar-menu-icon-hidden' : ''}`}>
+                <Menu size={24} aria-hidden="true" />
+              </span>
+              <span className={`site-navbar-menu-icon site-navbar-close-icon${isOpen ? ' site-navbar-menu-icon-visible' : ''}`}>
+                <X size={24} aria-hidden="true" />
+              </span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      {isOpen && (
-        <div id="mobile-navigation" className="site-navbar-mobile md:hidden">
+      <div
+        id="mobile-navigation"
+        className="site-navbar-mobile lg:hidden"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+      >
           <div className="site-navbar-mobile-links px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link
               to="/"
@@ -179,6 +281,13 @@ const Navbar = ({ theme, onToggleTheme }) => {
               onClick={() => setIsOpen(false)}
             >
               Home
+            </Link>
+            <Link
+              to="/subjects"
+              className="site-navbar-mobile-link block px-3 py-2 rounded-md text-base font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Subjects
             </Link>
             <Link
               to="/take-quiz"
@@ -194,8 +303,9 @@ const Navbar = ({ theme, onToggleTheme }) => {
                   className="site-navbar-mobile-link block px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsOpen(false)}
                 >
-                  Dashboard
+                  My Progress
                 </Link>
+                {renderPositionLink(true)}
                 <div className="site-navbar-mobile-account">
                   {renderUserMenuButton(true)}
                   {renderThemeButton(true)}
@@ -211,18 +321,10 @@ const Navbar = ({ theme, onToggleTheme }) => {
                 >
                   Login
                 </Link>
-                <Link
-                  to="/register"
-                  className="site-navbar-mobile-action block px-3 py-2 rounded-md text-base font-medium"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Register
-                </Link>
               </>
             )}
           </div>
-        </div>
-      )}
+      </div>
     </nav>
   );
 };

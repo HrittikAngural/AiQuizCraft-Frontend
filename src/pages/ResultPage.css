@@ -717,6 +717,7 @@
 .result-actions {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 20px;
 }

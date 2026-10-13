@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, ChevronLeft, ChevronRight, Coins } from 'lucide-react';
+import api from '../utils/api';
 import './QuestionsPage.css';
 
 export default function QuestionsPage() {
@@ -9,10 +10,13 @@ export default function QuestionsPage() {
   const questions = Array.isArray(state?.questions) ? state.questions : [];
   const totalTime = Number(state?.totalTime) || 1;
   const topic = state?.topic || 'Quiz';
+  const subject = state?.subject || '';
   const topicTransition = Boolean(state?.topicTransition);
+  const showPoints = Boolean(state?.showPointsOnQuestions);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [currentPoints, setCurrentPoints] = useState(null);
   const [timeLeft, setTimeLeft] = useState(totalTime * 60); // Convert to seconds
   const [startTime] = useState(Date.now()); // Track quiz start time
   const hasSubmitted = useRef(false);
@@ -23,6 +27,24 @@ export default function QuestionsPage() {
       navigate('/take-quiz', { replace: true });
     }
   }, [navigate, questions.length]);
+
+  useEffect(() => {
+    if (!showPoints) return undefined;
+
+    let active = true;
+    api.get('/api/results/leaderboard?period=all')
+      .then(({ data }) => {
+        if (active) setCurrentPoints(Number(data.currentUser?.allTimePoints) || 0);
+      })
+      .catch((error) => {
+        if (active) {
+          setCurrentPoints(null);
+          console.error('Could not load the current point total:', error);
+        }
+      });
+
+    return () => { active = false; };
+  }, [showPoints]);
 
   const handleOptionSelect = (optionIndex) => {
     setSelectedOptions(prev => ({
@@ -65,6 +87,9 @@ export default function QuestionsPage() {
         })),
         selectedOptions,
         topic,
+        subject,
+        quizAttemptId: state?.quizAttemptId,
+        difficulty: state?.difficulty || 'Medium',
         totalTime,
         timeLeft, // Remaining time in seconds
         timeTaken: timeTakenInSeconds, // Actual time spent
@@ -127,15 +152,25 @@ export default function QuestionsPage() {
 
   return (
     <div className="questions-page">
+      <div className={`questions-workspace${showPoints ? '' : ' questions-workspace-single'}`}>
       <section className="questions-card" aria-label={`${topic} quiz`}>
         <div className="questions-topline">
-          <p
-            className="questions-topic"
-            style={topicTransition ? { viewTransitionName: 'quiz-topic' } : undefined}
-          >
-            {topic} Quiz
-          </p>
-          <p className="questions-timer" aria-live="off">Time left: {formatTime(timeLeft)}</p>
+          <div>
+            <p className="questions-breadcrumb">
+              {subject ? `${subject}  >  ` : ''}{topic}
+            </p>
+            <p
+              className="questions-topic"
+              style={topicTransition ? { viewTransitionName: 'quiz-topic' } : undefined}
+            >
+              {topic} Quiz
+            </p>
+          </div>
+          <div className="questions-topline-actions">
+            <p className={`questions-timer${timeLeft <= 30 ? ' questions-timer-low' : ''}`} aria-live="off">
+              Time left: {formatTime(timeLeft)}
+            </p>
+          </div>
         </div>
 
         <div className="questions-progress-row">
@@ -192,6 +227,19 @@ export default function QuestionsPage() {
           )}
         </div>
       </section>
+      {showPoints && (
+        <aside className="questions-points-card">
+          <span className="questions-points-icon"><Coins size={19} /></span>
+          <span className="questions-points-label">Your points</span>
+          <strong>{currentPoints === null ? '—' : currentPoints}</strong>
+          <span>earned from correct answers</span>
+          <div className="questions-points-divider" />
+          <span className="questions-points-label">This quiz</span>
+          <strong className="questions-points-possible">{questions.length} <small>max points</small></strong>
+          <span>1 point for each correct answer</span>
+        </aside>
+      )}
+      </div>
     </div>
   );
 }

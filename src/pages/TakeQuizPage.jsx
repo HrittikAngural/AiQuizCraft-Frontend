@@ -9,21 +9,25 @@ const difficultyLevels = ['Easy', 'Medium', 'Hard'];
 export default function TakeQuizPage() {
     const location = useLocation();
     const trendingTopic = location.state?.trendingTopic || '';
+    const selectedSubject = location.state?.subject || '';
     const topicTransition = Boolean(location.state?.topicTransition && trendingTopic);
     const backgroundTopics = Array.isArray(location.state?.backgroundTopics)
         ? location.state.backgroundTopics
         : [];
     const [topic, setTopic] = useState(trendingTopic);
     const [numQuestions, setNumQuestions] = useState(10);
-    const [difficulty, setDifficulty] = useState('Medium');
+    const [difficulty, setDifficulty] = useState(location.state?.difficulty || 'Medium');
     const [totalTime, setTotalTime] = useState(1); // Default 1 minute
     const [randomTopic, setRandomTopic] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [error, setError] = useState(null);
+    const [isAutoStarting, setIsAutoStarting] = useState(Boolean(location.state?.launchQuiz));
     const navigate = useNavigate();
     const topicInputRef = useRef(null);
     const transitionTimer = useRef(null);
+    const autoStartTriggered = useRef(false);
+    const startQuizRef = useRef(null);
 
     useEffect(() => {
         setRandomTopic(hotTopics[Math.floor(Math.random() * hotTopics.length)]);
@@ -42,8 +46,8 @@ export default function TakeQuizPage() {
         return () => cancelAnimationFrame(focusFrame);
     }, [topic, topicTransition]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const startQuiz = async () => {
+        if (isLoading) return;
         setIsLoading(true);
         setError(null);
 
@@ -110,22 +114,58 @@ export default function TakeQuizPage() {
               state: {
                 questions,
                 topic: selectedTopic,
+                quizAttemptId: globalThis.crypto.randomUUID(),
+                                subject: selectedSubject,
                                 topicTransition: topicTransition || backgroundTopics.length > 0,
                                 backgroundTopics,
                 numQuestions,
                 difficulty,
                 totalTime,
+                showPointsOnQuestions: Boolean(location.state?.showPointsOnQuestions),
                 fromCache: data.cached
                             },
                             viewTransition: true
             });
           } catch (err) {
                         setError(err?.message || 'Quiz generation failed. Please try again.');
+                        setIsAutoStarting(false);
             console.error('Quiz submission error:', err);
           } finally {
             setIsLoading(false);
           }
         };
+
+    startQuizRef.current = startQuiz;
+
+    useEffect(() => {
+        if (!location.state?.launchQuiz || autoStartTriggered.current) return;
+
+        autoStartTriggered.current = true;
+        setIsAutoStarting(true);
+        navigate(location.pathname, {
+            replace: true,
+            state: { ...location.state, launchQuiz: false },
+        });
+        startQuizRef.current?.();
+    }, [location.key, location.pathname, location.state, navigate]);
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        startQuiz();
+    };
+
+    if (isAutoStarting && !error) {
+        return (
+            <div className="take-quiz-stage">
+                <section className="take-quiz-card quiz-auto-start" role="status" aria-live="polite">
+                    <span className="quiz-setup-icon"><Hourglass className="animate-spin" size={22} /></span>
+                    <h1>Preparing your {difficulty.toLowerCase()} quiz</h1>
+                    <p>{topic} · {numQuestions} questions</p>
+                    <span>Generating questions. This may take a moment…</span>
+                </section>
+            </div>
+        );
+    }
 
     return (
                 <div className={`take-quiz-stage${topicTransition ? ' take-quiz-stage-transition' : ''}${isTransitioning ? ' take-quiz-stage-launching' : ''}`}>

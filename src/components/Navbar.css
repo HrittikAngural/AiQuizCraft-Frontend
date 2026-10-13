@@ -44,7 +44,7 @@
 .site-navbar-brand-name {
   overflow: hidden;
   color: #f7f8fa;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -62,10 +62,64 @@
   transition: background-color 160ms ease, color 160ms ease;
 }
 
+.site-navbar-links > .site-navbar-link {
+  padding: 10px 14px;
+  font-size: 15px;
+}
+
 .site-navbar-link:hover,
 .site-navbar-mobile-link:hover {
   background: #30343a;
   color: #fff;
+}
+
+.site-navbar-link-active {
+  background: #393143;
+  color: #e5d9ff;
+}
+
+.site-navbar-position-link {
+  position: relative;
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 50%;
+  color: #eed18b;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.site-navbar-position-link > svg {
+  width: 29px;
+  height: 29px;
+}
+
+.site-navbar-position-link > span {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  max-width: 22px;
+  overflow: hidden;
+  color: #f7e4b0;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.site-navbar-position-link:hover,
+.site-navbar-position-link-active {
+  background: #393143;
+  color: #ffe8a8;
+}
+
+.site-navbar-position-link-mobile {
+  margin: 4px 12px;
 }
 
 .site-navbar-user {
@@ -81,8 +135,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  max-width: 190px;
-  padding: 9px 11px;
+  max-width: 235px;
+  padding: 6px 9px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -99,14 +153,61 @@
   color: #fff;
 }
 
-.site-navbar-user-trigger > span {
+.site-navbar-user-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  text-align: left;
+}
+
+.site-navbar-user-copy > strong {
   overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-navbar-user-copy > small {
+  overflow: hidden;
+  color: #aeb6c0;
+  font-size: 9px;
+  font-weight: 450;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .site-navbar-user-trigger > svg {
   flex: 0 0 auto;
+}
+
+.site-navbar-avatar {
+  display: inline-grid;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #7663a5, #40536e);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.site-navbar-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.site-navbar-avatar-large {
+  width: 43px;
+  height: 43px;
+  flex-basis: 43px;
+  font-size: 13px;
 }
 
 .site-navbar-user-chevron-open {
@@ -146,16 +247,47 @@
   position: absolute;
   z-index: 40;
   top: calc(100% + 7px);
-  left: 0;
-  width: max-content;
-  min-width: 100%;
-  padding: 5px;
+  right: 0;
+  width: 270px;
+  max-width: calc(100vw - 36px);
+  padding: 8px;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 14px;
   background: #24272c;
   box-shadow: 0 12px 28px rgb(0 0 0 / 25%);
   transform-origin: top left;
   animation: navbar-menu-enter 180ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.site-navbar-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 7px 12px;
+  border-bottom: 1px solid rgb(255 255 255 / 9%);
+}
+
+.site-navbar-user-profile > span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.site-navbar-user-profile strong,
+.site-navbar-user-profile small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-navbar-user-profile strong {
+  color: #f5f6f8;
+  font-size: 12px;
+}
+
+.site-navbar-user-profile small {
+  color: #aeb6c0;
+  font-size: 10px;
 }
 
 .site-navbar-user-logout {
@@ -215,6 +347,9 @@
 }
 
 .site-navbar-menu-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   color: #f7f8fa;
   transition: background-color 160ms ease;
@@ -224,8 +359,46 @@
   background: #30343a;
 }
 
+.site-navbar-menu-icon {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  transform: rotate(0) scale(1);
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.site-navbar-menu-icon-hidden {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.7);
+}
+
+.site-navbar-close-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.7);
+}
+
+.site-navbar-close-icon.site-navbar-menu-icon-visible {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
 .site-navbar-mobile {
-  padding: 0 0 10px;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: max-height 280ms cubic-bezier(0.2, 0.75, 0.25, 1), padding 180ms ease, opacity 180ms ease, visibility 0s linear 280ms;
+}
+
+.site-navbar-open .site-navbar-mobile {
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding-bottom: 10px;
+  opacity: 1;
+  visibility: visible;
+  transition: max-height 280ms cubic-bezier(0.2, 0.75, 0.25, 1), padding 180ms ease, opacity 180ms ease, visibility 0s;
 }
 
 .site-navbar-mobile-links {
@@ -237,8 +410,8 @@
 
 .site-navbar-mobile-account {
   display: flex;
-  align-items: flex-start;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 }
 
 .site-navbar-mobile-link,
@@ -248,7 +421,12 @@
 
 .site-navbar-user-menu-mobile {
   flex: 1 1 auto;
-  width: 100%;
+  min-width: 0;
+}
+
+.site-navbar-mobile-account > .site-navbar-theme-toggle-mobile {
+  flex: 0 0 36px;
+  margin: 7px 8px 7px 0;
 }
 
 .site-navbar-user-trigger.site-navbar-mobile-link {
@@ -267,12 +445,13 @@
   background: #30343a;
 }
 
-.site-navbar-user-trigger.site-navbar-mobile-link > span {
+.site-navbar-user-trigger.site-navbar-mobile-link .site-navbar-user-copy {
   flex: 1;
 }
 
 .site-navbar-user-menu-mobile .site-navbar-user-dropdown {
   left: 0;
+  right: auto;
   min-width: 100%;
   margin: 0;
 }
@@ -308,10 +487,14 @@
   }
 
   .site-navbar-brand-name {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .site-navbar-mobile {
+    padding-bottom: 0;
+  }
+
+  .site-navbar-open .site-navbar-mobile {
     padding-bottom: 8px;
   }
 }
@@ -319,10 +502,13 @@
 @media (prefers-reduced-motion: reduce) {
   .site-navbar,
   .site-navbar-link,
+  .site-navbar-position-link,
   .site-navbar-mobile-link,
   .site-navbar-action,
   .site-navbar-mobile-action,
-  .site-navbar-menu-button {
+  .site-navbar-menu-button,
+  .site-navbar-menu-icon,
+  .site-navbar-mobile {
     transition: none;
   }
 

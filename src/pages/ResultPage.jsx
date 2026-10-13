@@ -159,6 +159,7 @@ export default function ResultPage() {
   const questions = Array.isArray(state?.questions) ? state.questions : EMPTY_QUESTIONS;
   const selectedOptions = state?.selectedOptions;
   const topic = state?.topic || 'Quiz';
+  const subject = state?.subject || '';
   const totalTime = Number(state?.totalTime) || 0;
   const timeLeft = Number(state?.timeLeft) || 0;
   const reward = state?.reward || '';
@@ -220,6 +221,8 @@ export default function ResultPage() {
             },
             body: JSON.stringify({
               topic,
+              subject,
+              attemptId: state.quizAttemptId,
               score: correctCount,
               totalQuestions: questions.length,
               attempted: attemptedCount,
@@ -235,6 +238,7 @@ export default function ResultPage() {
         }
 
         setSaveSuccess(true);
+        window.dispatchEvent(new Event('quiz-result-saved'));
       } catch (error) {
         console.error('Could not save quiz result:', error);
         setSaveError(error.message || 'Could not save your quiz result.');
@@ -245,7 +249,7 @@ export default function ResultPage() {
 
     saveQuizResult();
     return undefined;
-  }, [state, questions.length, topic, correctCount, attemptedCount, timeTaken, reward]);
+  }, [state, questions.length, topic, subject, correctCount, attemptedCount, timeTaken, reward]);
 
   const outcomeCounts = {
     all: questions.length,
@@ -398,6 +402,13 @@ export default function ResultPage() {
         )}
 
         <footer className="result-actions">
+          <button
+            type="button"
+            className="result-home-button"
+            onClick={() => navigate('/answer-review', { state })}
+          >
+            <CircleHelp size={17} /> Open answer review
+          </button>
           <button type="button" className="result-home-button" onClick={() => navigate('/')}>
             <Home size={17} /> Return home
           </button>
