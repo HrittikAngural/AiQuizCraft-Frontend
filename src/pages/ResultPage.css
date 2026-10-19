@@ -152,7 +152,7 @@
 
 .result-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -218,6 +218,11 @@
 .result-stat-time .result-stat-icon {
   background: #edf2f6;
   color: #66839b;
+}
+
+.result-stat-points .result-stat-icon {
+  background: #f3efff;
+  color: #7654ce;
 }
 
 .result-review-section {

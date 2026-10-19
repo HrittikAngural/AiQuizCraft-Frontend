@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   CircleHelp,
   Clock3,
+  Coins,
   ExternalLink,
   Eye,
   EyeOff,
@@ -160,6 +161,13 @@ export default function ResultPage() {
   const selectedOptions = state?.selectedOptions;
   const topic = state?.topic || 'Quiz';
   const subject = state?.subject || '';
+  const isSubjectQuiz = Boolean(state?.isSubjectQuiz && subject);
+  const difficulty = ['Easy', 'Medium', 'Hard'].find(
+    (level) => level.toLowerCase() === String(state?.difficulty || '').toLowerCase()
+  ) || 'Medium';
+  const pointsPerCorrectAnswer = isSubjectQuiz
+    ? { Easy: 1, Medium: 2, Hard: 4 }[difficulty]
+    : 1;
   const totalTime = Number(state?.totalTime) || 0;
   const timeLeft = Number(state?.timeLeft) || 0;
   const reward = state?.reward || '';
@@ -222,12 +230,21 @@ export default function ResultPage() {
             body: JSON.stringify({
               topic,
               subject,
+              isSubjectQuiz,
+              difficulty,
               attemptId: state.quizAttemptId,
               score: correctCount,
               totalQuestions: questions.length,
               attempted: attemptedCount,
               timeTaken,
               reward,
+              questions: questions.map((question) => ({
+                question: question.question,
+                options: question.options,
+                correctAnswer: question.correctAnswer,
+                explanation: question.explanation,
+              })),
+              selectedOptions: selectedOptionsArray,
             }),
           },
         );
@@ -249,7 +266,7 @@ export default function ResultPage() {
 
     saveQuizResult();
     return undefined;
-  }, [state, questions.length, topic, subject, correctCount, attemptedCount, timeTaken, reward]);
+  }, [state, questions, selectedOptionsArray, topic, subject, isSubjectQuiz, difficulty, correctCount, attemptedCount, timeTaken, reward]);
 
   const outcomeCounts = {
     all: questions.length,
@@ -320,6 +337,10 @@ export default function ResultPage() {
           </div>
 
           <div className="result-stat-grid">
+            <div className="result-stat result-stat-points">
+              <span className="result-stat-icon"><Coins size={17} /></span>
+              <div><strong>{correctCount * pointsPerCorrectAnswer}</strong><span>Points earned</span></div>
+            </div>
             <div className="result-stat result-stat-correct">
               <span className="result-stat-icon"><CheckCircle2 size={17} /></span>
               <div><strong>{correctCount}</strong><span>Correct</span></div>
@@ -409,7 +430,10 @@ export default function ResultPage() {
           >
             <CircleHelp size={17} /> Open answer review
           </button>
-          <button type="button" className="result-home-button" onClick={() => navigate('/')}>
+          <button type="button" className="result-home-button" onClick={() => {
+            window.scrollTo(0, 0);
+            navigate('/');
+          }}>
             <Home size={17} /> Return home
           </button>
           <button type="button" className="result-retry-button" onClick={() => navigate('/take-quiz', { state: { trendingTopic: topic } })}>

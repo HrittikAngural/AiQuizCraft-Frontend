@@ -1,10 +1,6 @@
 .leaderboard-page {
   min-height: 75vh;
   padding: 38px 22px 68px;
-  background:
-    radial-gradient(ellipse at 8% 0%, rgb(233 226 255 / 48%), transparent 35%),
-    radial-gradient(ellipse at 95% 18%, rgb(219 235 255 / 46%), transparent 32%),
-    #f7f8fc;
   color: #19243a;
   font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
 }
@@ -237,4 +233,153 @@
 
 @media (prefers-reduced-motion: reduce) {
   .leader-loading span { animation: none; }
+}
+
+html[data-theme="dark"] .leaderboard-page {
+  background: transparent;
+  color: #e4e9ef;
+}
+
+html[data-theme="dark"] .leader-profile-banner,
+html[data-theme="dark"] .leader-page-tabs,
+html[data-theme="dark"] .leader-list-panel,
+html[data-theme="dark"] .leader-panel {
+  border-color: #394653;
+  background: #1d252e;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 16%);
+}
+
+html[data-theme="dark"] .leader-profile-banner {
+  background: linear-gradient(120deg, #1d252e 0%, #252638 56%, #202b38 100%);
+}
+
+html[data-theme="dark"] .leader-profile-id h1,
+html[data-theme="dark"] .leader-profile-points > strong,
+html[data-theme="dark"] .leader-section-top h2,
+html[data-theme="dark"] .leader-panel-heading h2,
+html[data-theme="dark"] .leader-empty strong,
+html[data-theme="dark"] .leader-podium-player > strong,
+html[data-theme="dark"] .leader-table td:nth-child(3),
+html[data-theme="dark"] .leader-name-cell,
+html[data-theme="dark"] .leader-stat-grid strong,
+html[data-theme="dark"] .leader-subject-progress strong,
+html[data-theme="dark"] .leader-achievement-title h3 {
+  color: #e4eaf0;
+}
+
+html[data-theme="dark"] .leader-profile-id p,
+html[data-theme="dark"] .leader-level-copy,
+html[data-theme="dark"] .leader-profile-points > span,
+html[data-theme="dark"] .leader-section-top p,
+html[data-theme="dark"] .leader-panel-description,
+html[data-theme="dark"] .leader-podium-player > span:not(.leader-podium-medal):not(.leader-avatar),
+html[data-theme="dark"] .leader-table th,
+html[data-theme="dark"] .leader-table td,
+html[data-theme="dark"] .leader-empty,
+html[data-theme="dark"] .leader-empty span,
+html[data-theme="dark"] .leader-loading,
+html[data-theme="dark"] .leader-empty-inline,
+html[data-theme="dark"] .leader-stat-grid span,
+html[data-theme="dark"] .leader-chart-label,
+html[data-theme="dark"] .leader-subject-progress span,
+html[data-theme="dark"] .leader-achievement-content p,
+html[data-theme="dark"] .leader-achievement-date,
+html[data-theme="dark"] .leader-achievement-progress {
+  color: #aab6c2;
+}
+
+html[data-theme="dark"] .leader-kicker {
+  color: #b9a4ec;
+}
+
+html[data-theme="dark"] .leader-level-progress,
+html[data-theme="dark"] .leader-progress-track,
+html[data-theme="dark"] .leader-stat-grid > div,
+html[data-theme="dark"] .leader-periods {
+  border-color: #394653;
+  background: #27313b;
+}
+
+html[data-theme="dark"] .leader-page-tab {
+  color: #aab6c2;
+}
+
+html[data-theme="dark"] .leader-page-tab-active,
+html[data-theme="dark"] .leader-period-active {
+  background: #7654ce;
+  color: #fff;
+}
+
+html[data-theme="dark"] .leader-period {
+  color: #aab6c2;
+}
+
+html[data-theme="dark"] .leader-podium {
+  border-color: #394653;
+}
+
+html[data-theme="dark"] .leader-podium-player {
+  border-color: #394653;
+  background: linear-gradient(180deg, #252e38, #1d252e);
+}
+
+html[data-theme="dark"] .podium-place-1 {
+  border-color: #74623b;
+  background: linear-gradient(180deg, #393326, #242b30);
+}
+
+html[data-theme="dark"] .podium-place-2 { border-color: #46515d; }
+html[data-theme="dark"] .podium-place-3 { border-color: #68503e; }
+
+html[data-theme="dark"] .leader-table td {
+  border-color: #35414c;
+}
+
+html[data-theme="dark"] .leader-current-user {
+  background: #302b42;
+}
+
+html[data-theme="dark"] .leader-current-user td {
+  border-color: #4a3d68;
+}
+
+html[data-theme="dark"] .leader-rank-number {
+  background: #303a45;
+  color: #bdc7d1;
+}
+
+html[data-theme="dark"] .leader-rank-1 { background: #554824; color: #f0d38b; }
+html[data-theme="dark"] .leader-rank-2 { background: #39434e; color: #d0d7df; }
+html[data-theme="dark"] .leader-rank-3 { background: #503c30; color: #e3b18d; }
+
+html[data-theme="dark"] .leader-stat-grid > div,
+html[data-theme="dark"] .leader-achievement {
+  border-color: #394653;
+  background: #222b34;
+}
+
+html[data-theme="dark"] .leader-achievement-earned {
+  border-color: #625637;
+  background: linear-gradient(120deg, #302d23, #222b34);
+}
+
+html[data-theme="dark"] .leader-achievement-icon {
+  background: #303944;
+  color: #aeb8c2;
+}
+
+html[data-theme="dark"] .leader-achievement-earned .leader-achievement-icon {
+  background: #554824;
+  color: #f0d38b;
+}
+
+html[data-theme="dark"] .leader-profile-id > .leader-avatar,
+html[data-theme="dark"] .leader-name-cell .leader-avatar,
+html[data-theme="dark"] .leader-podium-player .leader-avatar {
+  border-color: #29333d;
+}
+
+html[data-theme="dark"] .leader-avatar:not(.leader-avatar-1):not(.leader-avatar-2):not(.leader-avatar-3) {
+  background: linear-gradient(145deg, #41415c, #344455);
+  color: #d1c5f3;
 }

@@ -41,7 +41,9 @@ function ProgressPanel({ results, currentUser }) {
       date.setDate(date.getDate() - (6 - index));
       const dateKey = date.toDateString();
       const value = results.reduce((sum, result) => (
-        new Date(result.createdAt).toDateString() === dateKey ? sum + (Number(result.score) || 0) : sum
+        new Date(result.createdAt).toDateString() === dateKey
+          ? sum + (Number(result.points ?? result.score) || 0)
+          : sum
       ), 0);
       return { date, value };
     });

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -30,14 +30,54 @@ import './styles/dark-theme.css';
 // Context
 import { AuthProvider } from './context/AuthContext';
 
+const readReservedMainHeight = (path) => {
+  try {
+    return Number(sessionStorage.getItem(`aiquizcraft-main-height:${path}`)) || 0;
+  } catch (error) {
+    console.error('Could not restore the previous page layout:', error);
+    return 0;
+  }
+};
+
 function AppLayout() {
   const location = useLocation();
   const isTakingQuiz = location.pathname === '/questions';
   const isQuizSetup = location.pathname === '/take-quiz';
+  const mainRef = useRef(null);
+  const [reservedMainHeight, setReservedMainHeight] = useState(() => {
+    return {
+      path: location.pathname,
+      height: readReservedMainHeight(location.pathname),
+    };
+  });
   const [theme, setTheme] = useState(() => (
     document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
   ));
   const [showQuizFooter, setShowQuizFooter] = useState(false);
+
+  useLayoutEffect(() => {
+    const height = readReservedMainHeight(location.pathname);
+    setReservedMainHeight({ path: location.pathname, height });
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main || typeof ResizeObserver === 'undefined') return undefined;
+
+    const saveHeight = () => {
+      const height = Math.ceil(main.getBoundingClientRect().height);
+      if (!height) return;
+      try {
+        sessionStorage.setItem(`aiquizcraft-main-height:${location.pathname}`, String(height));
+      } catch (error) {
+        console.error('Could not preserve the page layout for reload:', error);
+      }
+    };
+    const observer = new ResizeObserver(saveHeight);
+    observer.observe(main);
+    saveHeight();
+    return () => observer.disconnect();
+  }, [location.pathname]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -72,8 +112,16 @@ function AppLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       {!isTakingQuiz && <Navbar theme={theme} onToggleTheme={toggleTheme} />}
-      <main className={`flex-grow${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}`}>
-        <Suspense fallback={<div className="flex min-h-[30vh] items-center justify-center text-sm text-slate-500" role="status">Loading page…</div>}>
+      <main
+        ref={mainRef}
+        className={`flex-1${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}`}
+        style={{
+          minHeight: (reservedMainHeight.path === location.pathname
+            ? reservedMainHeight.height
+            : readReservedMainHeight(location.pathname)) || undefined,
+        }}
+      >
+        <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/subjects" element={<SubjectExplorerPage />} />

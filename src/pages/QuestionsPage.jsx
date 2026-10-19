@@ -11,6 +11,13 @@ export default function QuestionsPage() {
   const totalTime = Number(state?.totalTime) || 1;
   const topic = state?.topic || 'Quiz';
   const subject = state?.subject || '';
+  const isSubjectQuiz = Boolean(state?.isSubjectQuiz && subject);
+  const difficulty = ['Easy', 'Medium', 'Hard'].find(
+    (level) => level.toLowerCase() === String(state?.difficulty || '').toLowerCase()
+  ) || 'Medium';
+  const pointsPerCorrectAnswer = isSubjectQuiz
+    ? { Easy: 1, Medium: 2, Hard: 4 }[difficulty]
+    : 1;
   const topicTransition = Boolean(state?.topicTransition);
   const showPoints = Boolean(state?.showPointsOnQuestions);
 
@@ -88,8 +95,9 @@ export default function QuestionsPage() {
         selectedOptions,
         topic,
         subject,
+        isSubjectQuiz,
         quizAttemptId: state?.quizAttemptId,
-        difficulty: state?.difficulty || 'Medium',
+        difficulty,
         totalTime,
         timeLeft, // Remaining time in seconds
         timeTaken: timeTakenInSeconds, // Actual time spent
@@ -235,8 +243,8 @@ export default function QuestionsPage() {
           <span>earned from correct answers</span>
           <div className="questions-points-divider" />
           <span className="questions-points-label">This quiz</span>
-          <strong className="questions-points-possible">{questions.length} <small>max points</small></strong>
-          <span>1 point for each correct answer</span>
+          <strong className="questions-points-possible">{questions.length * pointsPerCorrectAnswer} <small>max points</small></strong>
+          <span>{pointsPerCorrectAnswer} point{pointsPerCorrectAnswer === 1 ? '' : 's'} for each correct answer</span>
         </aside>
       )}
       </div>

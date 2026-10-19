@@ -107,6 +107,30 @@
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
+.subject-card-art {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  right: 18px;
+  display: grid;
+  width: 108px;
+  height: 108px;
+  place-items: center;
+  color: var(--subject-color);
+  opacity: .075;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.subject-card-art > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.subject-card > :not(.subject-card-art) {
+  z-index: 1;
+}
+
 .subject-card:hover {
   transform: translateY(-4px);
   border-color: #c9b9f1;
@@ -513,6 +537,10 @@ html[data-theme="dark"] .subject-card-arrow {
 html[data-theme="dark"] .subject-card:hover {
   border-color: #6a5898;
   box-shadow: 0 15px 32px rgb(0 0 0 / 22%);
+}
+
+html[data-theme="dark"] .subject-card-art {
+  opacity: .14;
 }
 
 html[data-theme="dark"] .topic-intro-points {

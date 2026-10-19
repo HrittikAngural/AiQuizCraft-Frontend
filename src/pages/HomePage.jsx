@@ -76,7 +76,6 @@ const HomePage = () => {
   const [isLaunchingQuiz, setIsLaunchingQuiz] = useState(false);
   const [dashboardTopic, setDashboardTopic] = useState('');
   const navigationStarted = useRef(false);
-  const lastTouchTap = useRef({ topic: '', time: 0 });
   const launchTimeout = useRef(null);
 
   useEffect(() => {
@@ -141,14 +140,18 @@ const HomePage = () => {
       event.currentTarget.style.viewTransitionName = 'quiz-topic';
     }
 
-    navigate('/take-quiz', {
-      state: {
-        trendingTopic: topic,
-        topicTransition: true,
-        backgroundTopics: topics.map(item => item.topic)
-      },
-      viewTransition: true
-    });
+    setIsLaunchingQuiz(true);
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    launchTimeout.current = window.setTimeout(() => {
+      navigate('/take-quiz', {
+        state: {
+          trendingTopic: topic,
+          topicTransition: true,
+          backgroundTopics: topics.map(item => item.topic)
+        },
+        viewTransition: true
+      });
+    }, reducedMotion ? 0 : 650);
   };
 
   const launchQuizSetup = () => {
@@ -209,26 +212,8 @@ const HomePage = () => {
                   className={`topic-word${index === 0 ? ' topic-word-leading' : ''}`}
                   key={topic.topic}
                   aria-label={`Open a quiz about ${topic.topic}`}
-                  title="Double-click to quiz this topic"
-                  onClick={(event) => {
-                    if (event.detail === 0) {
-                      openTopicQuiz(event, topic.topic);
-                    }
-                  }}
-                  onDoubleClick={(event) => openTopicQuiz(event, topic.topic)}
-                  onPointerUp={(event) => {
-                    if (event.pointerType !== 'touch') return;
-
-                    const now = Date.now();
-                    const previousTap = lastTouchTap.current;
-                    if (previousTap.topic === topic.topic && now - previousTap.time < 450) {
-                      event.preventDefault();
-                      openTopicQuiz(event, topic.topic);
-                      return;
-                    }
-
-                    lastTouchTap.current = { topic: topic.topic, time: now };
-                  }}
+                  title="Click to quiz this topic"
+                  onClick={(event) => openTopicQuiz(event, topic.topic)}
                   data-topic-leading={index === 0 ? 'true' : undefined}
                   style={{
                     '--topic-index': index,

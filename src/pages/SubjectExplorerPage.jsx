@@ -79,6 +79,9 @@ export default function SubjectExplorerPage() {
                 key={slug}
                 onClick={() => navigate(`/subjects/${slug}`)}
               >
+                <span className="subject-card-art" aria-hidden="true">
+                  {createElement(Icon, { size: 108, strokeWidth: 1 })}
+                </span>
                 <span className="subject-icon">{createElement(Icon, { size: 22, 'aria-hidden': true })}</span>
                 <span className="subject-card-content">
                   <strong>{name}</strong>
