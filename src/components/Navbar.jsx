@@ -49,6 +49,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
   const { user, logout, isAuthenticated } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const navbarRef = useRef(null);
   const desktopUserMenuRef = useRef(null);
   const mobileUserMenuRef = useRef(null);
   const [position, setPosition] = useState(null);
@@ -91,6 +92,10 @@ const Navbar = ({ theme, onToggleTheme }) => {
     navigate('/');
   };
 
+  const handleMenuToggle = () => {
+    setIsOpen((open) => !open);
+  };
+
   useEffect(() => {
     setIsOpen(false);
     setIsUserMenuOpen(false);
@@ -99,18 +104,42 @@ const Navbar = ({ theme, onToggleTheme }) => {
   useEffect(() => {
     if (!isOpen) return undefined;
 
-    let previousScrollY = window.scrollY;
-    const closeOnScrollDown = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY - previousScrollY > 8) {
-        setIsOpen(false);
-        setIsUserMenuOpen(false);
+    const closeMenu = () => {
+      setIsOpen(false);
+      setIsUserMenuOpen(false);
+    };
+    const closeOnOutsideTap = (event) => {
+      if (!navbarRef.current?.contains(event.target)) closeMenu();
+    };
+    let touchStartY = null;
+    const recordTouchStart = (event) => {
+      touchStartY = event.touches[0]?.clientY ?? null;
+    };
+    const closeOnTouchScroll = (event) => {
+      const touchY = event.touches[0]?.clientY;
+      if (touchY !== undefined && touchStartY !== null && Math.abs(touchY - touchStartY) > 8) {
+        closeMenu();
       }
-      previousScrollY = currentScrollY;
+    };
+    const closeOnEscape = (event) => {
+      const scrollKeys = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '];
+      const scrollKeyPressed = scrollKeys.includes(event.key) &&
+        !navbarRef.current?.contains(event.target);
+      if (event.key === 'Escape' || scrollKeyPressed) closeMenu();
     };
 
-    window.addEventListener('scroll', closeOnScrollDown, { passive: true });
-    return () => window.removeEventListener('scroll', closeOnScrollDown);
+    window.addEventListener('wheel', closeMenu, { passive: true });
+    window.addEventListener('touchstart', recordTouchStart, { capture: true, passive: true });
+    window.addEventListener('touchmove', closeOnTouchScroll, { capture: true, passive: true });
+    document.addEventListener('pointerdown', closeOnOutsideTap);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.removeEventListener('wheel', closeMenu);
+      window.removeEventListener('touchstart', recordTouchStart, true);
+      window.removeEventListener('touchmove', closeOnTouchScroll, true);
+      document.removeEventListener('pointerdown', closeOnOutsideTap);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -211,7 +240,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
   );
 
   return (
-    <nav className={`site-navbar${isOpen ? ' site-navbar-open' : ''}`} aria-label="Main navigation">
+    <nav ref={navbarRef} className={`site-navbar${isOpen ? ' site-navbar-open' : ''}`} aria-label="Main navigation">
       <div className="site-navbar-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="site-navbar-bar flex items-center justify-between h-16">
           <div className="flex items-center min-w-0">
@@ -267,7 +296,7 @@ const Navbar = ({ theme, onToggleTheme }) => {
           </div>
           <div className="lg:hidden">
             <button
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={handleMenuToggle}
               className="site-navbar-menu-button inline-flex items-center justify-center p-2 rounded-md focus:outline-none"
               aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={isOpen}

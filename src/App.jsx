@@ -154,7 +154,7 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {!isTakingQuiz && <Navbar theme={theme} onToggleTheme={toggleTheme} />}
+      <Navbar theme={theme} onToggleTheme={toggleTheme} />
       <main
         ref={mainRef}
         className={`flex-1${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}${swipeDirection === 1 ? ' mobile-page-swipe-forward' : swipeDirection === -1 ? ' mobile-page-swipe-back' : ''}`}
