@@ -106,14 +106,32 @@ const HomePage = () => {
 
   useEffect(() => {
     let previousScrollY = window.scrollY;
+    let scrollDirection = 0;
+    let directionalDistance = 0;
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY - previousScrollY > 8 && currentScrollY > 24) {
-        setShowQuizDashboard(true);
-      } else if (previousScrollY - currentScrollY > 8 || currentScrollY < 24) {
-        setShowQuizDashboard(false);
-      }
+      const delta = currentScrollY - previousScrollY;
       previousScrollY = currentScrollY;
+
+      if (currentScrollY < 24) {
+        scrollDirection = 0;
+        directionalDistance = 0;
+        setShowQuizDashboard(false);
+        return;
+      }
+
+      if (delta === 0) return;
+
+      const nextDirection = Math.sign(delta);
+      if (nextDirection !== scrollDirection) {
+        scrollDirection = nextDirection;
+        directionalDistance = 0;
+      }
+      directionalDistance += Math.abs(delta);
+
+      if (directionalDistance >= 8) {
+        setShowQuizDashboard(scrollDirection > 0);
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
