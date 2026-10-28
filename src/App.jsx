@@ -1,7 +1,8 @@
 import React, { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './App.css';
 
 // Pages
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -39,11 +40,16 @@ const readReservedMainHeight = (path) => {
   }
 };
 
+const swipeRoutes = ['/', '/subjects', '/take-quiz'];
+
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isTakingQuiz = location.pathname === '/questions';
   const isQuizSetup = location.pathname === '/take-quiz';
   const mainRef = useRef(null);
+  const touchStart = useRef(null);
+  const [swipeDirection, setSwipeDirection] = useState(0);
   const [reservedMainHeight, setReservedMainHeight] = useState(() => {
     return {
       path: location.pathname,
@@ -96,6 +102,43 @@ function AppLayout() {
     setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark');
   };
 
+  const handleTouchStart = (event) => {
+    if (window.innerWidth > 768) return;
+    if (event.touches.length !== 1) {
+      touchStart.current = null;
+      return;
+    }
+    if (!swipeRoutes.includes(location.pathname)) {
+      touchStart.current = null;
+      return;
+    }
+
+    const { clientX, clientY } = event.touches[0];
+    touchStart.current = { clientX, clientY, path: location.pathname };
+  };
+
+  const handleTouchEnd = (event) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start || window.innerWidth > 768) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - start.clientX;
+    const deltaY = touch.clientY - start.clientY;
+    if (Math.abs(deltaX) < 75 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+
+    const currentIndex = swipeRoutes.indexOf(start.path);
+    const direction = deltaX < 0 ? 1 : -1;
+    const nextPath = swipeRoutes[currentIndex + direction];
+    if (!nextPath) return;
+
+    setSwipeDirection(direction);
+    window.scrollTo(0, 0);
+    navigate(nextPath);
+  };
+
   useEffect(() => {
     if (!isQuizSetup) {
       setShowQuizFooter(false);
@@ -114,7 +157,13 @@ function AppLayout() {
       {!isTakingQuiz && <Navbar theme={theme} onToggleTheme={toggleTheme} />}
       <main
         ref={mainRef}
-        className={`flex-1${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}`}
+        className={`flex-1${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}${swipeDirection === 1 ? ' mobile-page-swipe-forward' : swipeDirection === -1 ? ' mobile-page-swipe-back' : ''}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => { touchStart.current = null; }}
+        onAnimationEnd={(event) => {
+          if (event.target === event.currentTarget) setSwipeDirection(0);
+        }}
         style={{
           minHeight: (reservedMainHeight.path === location.pathname
             ? reservedMainHeight.height
