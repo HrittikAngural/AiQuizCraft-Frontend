@@ -49,6 +49,8 @@ function AppLayout() {
   const isQuizSetup = location.pathname === '/take-quiz';
   const mainRef = useRef(null);
   const touchStart = useRef(null);
+  const previousPath = useRef(location.pathname);
+  const pendingSwipeDirection = useRef(0);
   const [swipeDirection, setSwipeDirection] = useState(0);
   const [reservedMainHeight, setReservedMainHeight] = useState(() => {
     return {
@@ -65,6 +67,17 @@ function AppLayout() {
     const height = readReservedMainHeight(location.pathname);
     setReservedMainHeight({ path: location.pathname, height });
   }, [location.pathname]);
+
+  useLayoutEffect(() => {
+    if (previousPath.current === location.pathname) return;
+
+    previousPath.current = location.pathname;
+    setSwipeDirection(location.state?.topicTransition ? 0 : pendingSwipeDirection.current || 1);
+    pendingSwipeDirection.current = 0;
+
+    const transitionTimeout = window.setTimeout(() => setSwipeDirection(0), 260);
+    return () => window.clearTimeout(transitionTimeout);
+  }, [location.pathname, location.state?.topicTransition]);
 
   useEffect(() => {
     const main = mainRef.current;
@@ -134,7 +147,7 @@ function AppLayout() {
     const nextPath = swipeRoutes[currentIndex + direction];
     if (!nextPath) return;
 
-    setSwipeDirection(direction);
+    pendingSwipeDirection.current = direction;
     window.scrollTo(0, 0);
     navigate(nextPath);
   };

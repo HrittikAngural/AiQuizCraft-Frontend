@@ -97,23 +97,6 @@ const Navbar = ({ theme, onToggleTheme }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!isOpen) return undefined;
-
-    let previousScrollY = window.scrollY;
-    const closeOnScrollDown = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY - previousScrollY > 8) {
-        setIsOpen(false);
-        setIsUserMenuOpen(false);
-      }
-      previousScrollY = currentScrollY;
-    };
-
-    window.addEventListener('scroll', closeOnScrollDown, { passive: true });
-    return () => window.removeEventListener('scroll', closeOnScrollDown);
-  }, [isOpen]);
-
-  useEffect(() => {
     if (!isUserMenuOpen) return undefined;
 
     const closeOnOutsideClick = (event) => {
