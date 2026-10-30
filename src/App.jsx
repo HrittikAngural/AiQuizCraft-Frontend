@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, Outlet, RouterProvider, useLocation, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
@@ -47,6 +47,7 @@ function AppLayout() {
   const navigate = useNavigate();
   const isTakingQuiz = location.pathname === '/questions';
   const isQuizSetup = location.pathname === '/take-quiz';
+  const isResultPage = location.pathname === '/result';
   const mainRef = useRef(null);
   const touchStart = useRef(null);
   const [swipeDirection, setSwipeDirection] = useState(0);
@@ -154,10 +155,10 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar theme={theme} onToggleTheme={toggleTheme} />
+      {!isTakingQuiz && <Navbar theme={theme} onToggleTheme={toggleTheme} />}
       <main
         ref={mainRef}
-        className={`flex-1${isTakingQuiz || isQuizSetup ? '' : ' pb-8'}${swipeDirection === 1 ? ' mobile-page-swipe-forward' : swipeDirection === -1 ? ' mobile-page-swipe-back' : ''}`}
+        className={`${isResultPage ? 'flex-none' : 'flex-1'}${isTakingQuiz || isQuizSetup || isResultPage ? '' : ' pb-8'}${swipeDirection === 1 ? ' mobile-page-swipe-forward' : swipeDirection === -1 ? ' mobile-page-swipe-back' : ''}`}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onTouchCancel={() => { touchStart.current = null; }}
@@ -165,86 +166,13 @@ function AppLayout() {
           if (event.target === event.currentTarget) setSwipeDirection(0);
         }}
         style={{
-          minHeight: (reservedMainHeight.path === location.pathname
+          minHeight: isResultPage ? undefined : (reservedMainHeight.path === location.pathname
             ? reservedMainHeight.height
             : readReservedMainHeight(location.pathname)) || undefined,
         }}
       >
         <Suspense fallback={null}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/subjects" element={<SubjectExplorerPage />} />
-              <Route path="/subjects/:subjectSlug" element={<SubjectTopicsPage />} />
-              <Route path="/loading" element={<LoadingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/take-quiz"
-                element={
-                  <ProtectedRoute>
-                    <TakeQuizPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/questions" element={
-                <ProtectedRoute>
-                  <QuestionsPage />
-                </ProtectedRoute>
-              } />
-              <Route
-                path="/result"
-                element={
-                  <ProtectedRoute>
-                    <ResultPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/answer-review"
-                element={
-                  <ProtectedRoute>
-                    <AnswerReviewPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/leaderboard"
-                element={
-                  <ProtectedRoute>
-                    <LeaderboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/performance-analysis"
-                element={
-                  <ProtectedRoute>
-                    <PerformanceAnalysisPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/history"
-                element={
-                  <ProtectedRoute>
-                    <HistoryPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/rewards" element={
-                <ProtectedRoute>
-                  <RewardsPage />
-                </ProtectedRoute>
-              } />
-            </Routes>
+          <Outlet />
         </Suspense>
       </main>
       {!isTakingQuiz && (!isQuizSetup || showQuizFooter) && <Footer />}
@@ -253,13 +181,40 @@ function AppLayout() {
   );
 }
 
+const protectedPage = (Page) => React.createElement(
+  ProtectedRoute,
+  null,
+  React.createElement(Page)
+);
+
+const router = createBrowserRouter([
+  {
+    element: <AppLayout />,
+    children: [
+      { path: '/', element: <HomePage /> },
+      { path: '/subjects', element: <SubjectExplorerPage /> },
+      { path: '/subjects/:subjectSlug', element: <SubjectTopicsPage /> },
+      { path: '/loading', element: <LoadingPage /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <RegisterPage /> },
+      { path: '/dashboard', element: protectedPage(DashboardPage) },
+      { path: '/take-quiz', element: protectedPage(TakeQuizPage) },
+      { path: '/questions', element: protectedPage(QuestionsPage) },
+      { path: '/result', element: protectedPage(ResultPage) },
+      { path: '/answer-review', element: protectedPage(AnswerReviewPage) },
+      { path: '/leaderboard', element: protectedPage(LeaderboardPage) },
+      { path: '/performance-analysis', element: protectedPage(PerformanceAnalysisPage) },
+      { path: '/history', element: protectedPage(HistoryPage) },
+      { path: '/rewards', element: protectedPage(RewardsPage) }
+    ]
+  }
+]);
+
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <AppLayout />
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
 

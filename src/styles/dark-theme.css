@@ -224,6 +224,33 @@ html[data-theme="dark"] .take-quiz-stage {
   background: #11161c;
 }
 
+html[data-theme="dark"] .subject-quiz-loading-stage {
+  background: radial-gradient(ellipse at 50% 42%, #1d2921 0%, #151d18 58%, #11161c 100%);
+}
+
+html[data-theme="dark"] .subject-quiz-loading-copy {
+  border-color: rgb(68 84 72 / 88%);
+  background: rgb(29 37 46 / 91%);
+  box-shadow: 0 14px 40px rgb(0 0 0 / 24%);
+}
+
+html[data-theme="dark"] .subject-quiz-loading-eyebrow {
+  color: #a3b9a6;
+}
+
+html[data-theme="dark"] .subject-quiz-loading-copy h1 {
+  color: #e1eee3;
+}
+
+html[data-theme="dark"] .subject-quiz-loading-copy p,
+html[data-theme="dark"] .subject-quiz-loading-note {
+  color: #b4c2b6;
+}
+
+html[data-theme="dark"] .subject-quiz-loading-progress {
+  background: #37463a;
+}
+
 html[data-theme="dark"] .take-quiz-stage-transition {
   animation-name: quiz-stage-arrive-dark;
 }
@@ -240,8 +267,14 @@ html[data-theme="dark"] .take-quiz-card {
 }
 
 html[data-theme="dark"] .quiz-setup-title,
+html[data-theme="dark"] .quiz-auto-start h1,
 html[data-theme="dark"] .quiz-timer-heading h3 {
   color: #e4ebf1;
+}
+
+html[data-theme="dark"] .quiz-auto-start p,
+html[data-theme="dark"] .quiz-auto-start > span:last-child {
+  color: #afbecb;
 }
 
 html[data-theme="dark"] .quiz-setup-icon,
@@ -324,6 +357,15 @@ html[data-theme="dark"] .question-option-selected {
   border-color: #82a6c4;
   background: #2d4355;
   color: #f0f4f7;
+}
+
+html[data-theme="dark"] .question-option-keyboard-active {
+  border-color: #9bbbd4;
+  box-shadow: 0 0 0 3px rgb(130 166 196 / 24%);
+}
+
+html[data-theme="dark"] .question-option:focus-visible {
+  outline-color: #9bbbd4;
 }
 
 html[data-theme="dark"] .question-option-marker {
@@ -615,6 +657,12 @@ html[data-theme="dark"] .result-answer-correct {
   background: #294b32;
 }
 
+html[data-theme="dark"] .result-answer-skipped-correct {
+  border-color: #47514a;
+  border-left-color: #87918a;
+  background: #2a322d;
+}
+
 html[data-theme="dark"] .result-answer-incorrect {
   border-color: #a45b53;
   border-left-color: #ef8277;
@@ -637,6 +685,10 @@ html[data-theme="dark"] .result-answer-correct-mark {
   color: #b8efc0;
 }
 
+html[data-theme="dark"] .result-answer-skipped-correct .result-answer-text {
+  color: #b0bab2;
+}
+
 html[data-theme="dark"] .result-answer-incorrect .result-answer-text,
 html[data-theme="dark"] .result-answer-wrong-mark {
   color: #ffc0b9;
@@ -648,12 +700,19 @@ html[data-theme="dark"] .result-filter-empty {
   background: #202a28;
 }
 
-html[data-theme="dark"] .result-explanation-toggle {
+html[data-theme="dark"] .result-explanation-label {
   color: #b6d0b9;
 }
 
-html[data-theme="dark"] .result-explanation-toggle-action {
-  color: #a5b2a7;
+html[data-theme="dark"] .result-explanation-toggle {
+  border-color: #46564a;
+  background: #27322c;
+  color: #b6d0b9;
+}
+
+html[data-theme="dark"] .result-explanation-toggle:hover {
+  border-color: #63806a;
+  background: #304136;
 }
 
 html[data-theme="dark"] .result-explanation-more-link {

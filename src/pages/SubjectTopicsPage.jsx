@@ -2,9 +2,12 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getSubject } from '../data/subjectCatalog';
+import { quizTimeOptions } from '../data/quizOptions';
 import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
 import './ExplorePages.css';
+
+const questionCountOptions = [5, 10, 20, 50, 100];
 
 const filters = [
   { value: 'all', label: 'All topics' },
@@ -31,6 +34,8 @@ export default function SubjectTopicsPage() {
   const { isAuthenticated } = useContext(AuthContext);
   const [filter, setFilter] = useState('all');
   const [selectedDifficulties, setSelectedDifficulties] = useState({});
+  const [selectedTimes, setSelectedTimes] = useState({});
+  const [selectedQuestionCounts, setSelectedQuestionCounts] = useState({});
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState('');
   const subject = getSubject(subjectSlug);
@@ -122,22 +127,58 @@ export default function SubjectTopicsPage() {
                 <h3>{topic.name}</h3>
                 <span>Personalized quiz · AI generated on demand</span>
               </div>
-              <label className="topic-difficulty-control">
-                <span>Difficulty</span>
-                <select
-                  className={`difficulty-select difficulty-${selectedDifficulties[topic.name] || topic.difficulty}`}
-                  aria-label={`Difficulty for ${topic.name}`}
-                  value={selectedDifficulties[topic.name] || topic.difficulty}
-                  onChange={(event) => setSelectedDifficulties((current) => ({
-                    ...current,
-                    [topic.name]: event.target.value,
-                  }))}
-                >
-                  {difficultyOptions.map((option) => (
-                    <option value={option.value} key={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </label>
+              <div className="topic-card-settings">
+                <label className="topic-card-setting">
+                  <span>Time</span>
+                  <select
+                    className="topic-setting-select"
+                    aria-label={`Time limit for ${topic.name}`}
+                    value={selectedTimes[topic.name] ?? 1}
+                    onChange={(event) => setSelectedTimes((current) => ({
+                      ...current,
+                      [topic.name]: Number(event.target.value),
+                    }))}
+                  >
+                    {quizTimeOptions.map((minutes) => (
+                      <option value={minutes} key={minutes}>
+                        {minutes} min{minutes === 1 ? '' : 's'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="topic-card-setting">
+                  <span>Questions</span>
+                  <select
+                    className="topic-setting-select"
+                    aria-label={`Number of questions for ${topic.name}`}
+                    value={selectedQuestionCounts[topic.name] ?? 10}
+                    onChange={(event) => setSelectedQuestionCounts((current) => ({
+                      ...current,
+                      [topic.name]: Number(event.target.value),
+                    }))}
+                  >
+                    {questionCountOptions.map((count) => (
+                      <option value={count} key={count}>{count}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="topic-card-setting">
+                  <span>Difficulty</span>
+                  <select
+                    className={`topic-setting-select difficulty-select difficulty-${selectedDifficulties[topic.name] || topic.difficulty}`}
+                    aria-label={`Difficulty for ${topic.name}`}
+                    value={selectedDifficulties[topic.name] || topic.difficulty}
+                    onChange={(event) => setSelectedDifficulties((current) => ({
+                      ...current,
+                      [topic.name]: event.target.value,
+                    }))}
+                  >
+                    {difficultyOptions.map((option) => (
+                      <option value={option.value} key={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <button
                 type="button"
                 className="topic-take-button"
@@ -147,6 +188,8 @@ export default function SubjectTopicsPage() {
                     topicTransition: true,
                     subject: subject.name,
                     difficulty: topicDifficulty[selectedDifficulties[topic.name] || topic.difficulty],
+                    totalTime: selectedTimes[topic.name] ?? 1,
+                    numQuestions: selectedQuestionCounts[topic.name] ?? 10,
                     launchQuiz: true,
                     showPointsOnQuestions: true,
                   },

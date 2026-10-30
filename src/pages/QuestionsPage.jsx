@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, ChevronLeft, ChevronRight, Coins } from 'lucide-react';
 import api from '../utils/api';
 import './QuestionsPage.css';
@@ -23,17 +23,59 @@ export default function QuestionsPage() {
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [activeOptionIndex, setActiveOptionIndex] = useState(0);
   const [currentPoints, setCurrentPoints] = useState(null);
   const [timeLeft, setTimeLeft] = useState(totalTime * 60); // Convert to seconds
   const [startTime] = useState(Date.now()); // Track quiz start time
   const hasSubmitted = useRef(false);
   const submitQuizRef = useRef(null);
+  const optionButtonRefs = useRef([]);
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => (
+    questions.length > 0 &&
+    !hasSubmitted.current &&
+    currentLocation.pathname === '/questions' &&
+    nextLocation.pathname !== currentLocation.pathname
+  ));
 
   useEffect(() => {
     if (questions.length === 0) {
       navigate('/take-quiz', { replace: true });
     }
   }, [navigate, questions.length]);
+
+  useEffect(() => {
+    if (questions.length === 0) return undefined;
+
+    const warnBeforeLeaving = (event) => {
+      if (hasSubmitted.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [questions.length]);
+
+  useEffect(() => {
+    const options = questions[currentQuestionIndex]?.options;
+    if (!Array.isArray(options) || options.length === 0) return undefined;
+
+    const savedOption = selectedOptions[currentQuestionIndex];
+    const initialOptionIndex = Number.isInteger(savedOption) && savedOption >= 0 && savedOption < options.length
+      ? savedOption
+      : 0;
+
+    setActiveOptionIndex(initialOptionIndex);
+    const focusFrame = requestAnimationFrame(() => {
+      optionButtonRefs.current[initialOptionIndex]?.focus({ preventScroll: true });
+    });
+
+    return () => cancelAnimationFrame(focusFrame);
+  }, [currentQuestionIndex, questions, selectedOptions]);
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') blocker.reset();
+  }, [blocker]);
 
   useEffect(() => {
     if (!showPoints) return undefined;
@@ -54,6 +96,7 @@ export default function QuestionsPage() {
   }, [showPoints]);
 
   const handleOptionSelect = (optionIndex) => {
+    setActiveOptionIndex(optionIndex);
     setSelectedOptions(prev => ({
       ...prev,
       [currentQuestionIndex]: optionIndex
@@ -68,7 +111,7 @@ export default function QuestionsPage() {
     setCurrentQuestionIndex(index => Math.max(index - 1, 0));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (answers = selectedOptions) => {
     if (hasSubmitted.current) return;
 
     hasSubmitted.current = true;
@@ -76,7 +119,7 @@ export default function QuestionsPage() {
     const timeTakenInSeconds = Math.floor((endTime - startTime) / 1000);
     
     const correctCount = questions.reduce((acc, question, index) => {
-      return acc + (selectedOptions[index] === question.correctAnswer ? 1 : 0);
+      return acc + (answers[index] === question.correctAnswer ? 1 : 0);
     }, 0);
     
     // Calculate reward
@@ -86,26 +129,63 @@ export default function QuestionsPage() {
     else if (accuracy >= 80) reward = 'silver';
     else if (accuracy >= 65) reward = 'bronze';
 
-    navigate('/result', {
-      state: {
-        questions: questions.map(q => ({
-          ...q,
-          correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : q.answer
-        })),
-        selectedOptions,
-        topic,
-        subject,
-        isSubjectQuiz,
-        quizAttemptId: state?.quizAttemptId,
-        difficulty,
-        totalTime,
-        timeLeft, // Remaining time in seconds
-        timeTaken: timeTakenInSeconds, // Actual time spent
-        reward // Add reward to state
-      }
-    });
+    const resultState = {
+      questions: questions.map(q => ({
+        ...q,
+        correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : q.answer
+      })),
+      selectedOptions: answers,
+      topic,
+      subject,
+      isSubjectQuiz,
+      quizAttemptId: state?.quizAttemptId,
+      difficulty,
+      totalTime,
+      timeLeft, // Remaining time in seconds
+      timeTaken: timeTakenInSeconds, // Actual time spent
+      reward // Add reward to state
+    };
+    navigate('/result', { replace: true, state: resultState });
   };
   submitQuizRef.current = handleSubmit;
+
+  const handleQuizKeyDown = (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+    const target = event.target;
+    if (target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+
+    const options = questions[currentQuestionIndex]?.options;
+    if (!Array.isArray(options) || options.length === 0) return;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const focusedOption = target.closest?.('.question-option');
+      const focusedIndex = Number(focusedOption?.dataset.optionIndex);
+      const currentOptionIndex = Number.isInteger(focusedIndex) ? focusedIndex : activeOptionIndex;
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      const nextOptionIndex = (currentOptionIndex + direction + options.length) % options.length;
+
+      setActiveOptionIndex(nextOptionIndex);
+      optionButtonRefs.current[nextOptionIndex]?.focus({ preventScroll: true });
+      return;
+    }
+
+    if (event.key !== 'Enter') return;
+
+    const focusedOption = target.closest?.('.question-option');
+    const optionIndex = Number(focusedOption?.dataset.optionIndex);
+    if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= options.length) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const nextAnswers = { ...selectedOptions, [currentQuestionIndex]: optionIndex };
+    setActiveOptionIndex(optionIndex);
+    setSelectedOptions(nextAnswers);
+
+    if (currentQuestionIndex === questions.length - 1) handleSubmit(nextAnswers);
+    else handleNext();
+  };
 
   useEffect(() => {
     if (questions.length === 0 || hasSubmitted.current) return undefined;
@@ -127,27 +207,6 @@ export default function QuestionsPage() {
     if (timeLeft === 0) submitQuizRef.current?.();
   }, [timeLeft]);
 
-  useEffect(() => {
-    if (questions.length === 0) return undefined;
-
-    const keepQuizHistoryEntry = () => {
-      window.history.pushState(window.history.state, '', window.location.href);
-    };
-    const preventLeavingQuiz = (event) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    keepQuizHistoryEntry();
-    window.addEventListener('popstate', keepQuizHistoryEntry);
-    window.addEventListener('beforeunload', preventLeavingQuiz);
-
-    return () => {
-      window.removeEventListener('popstate', keepQuizHistoryEntry);
-      window.removeEventListener('beforeunload', preventLeavingQuiz);
-    };
-  }, [questions.length]);
-
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -159,7 +218,7 @@ export default function QuestionsPage() {
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   return (
-    <div className="questions-page">
+    <div className="questions-page" onKeyDown={handleQuizKeyDown}>
       <div className={`questions-workspace${showPoints ? '' : ' questions-workspace-single'}`}>
       <section className="questions-card" aria-label={`${topic} quiz`}>
         <div className="questions-topline">
@@ -197,10 +256,13 @@ export default function QuestionsPage() {
               return (
                 <button
                   key={index}
+                  ref={(button) => { optionButtonRefs.current[index] = button; }}
                   type="button"
                   aria-pressed={isSelected}
+                  data-option-index={index}
+                  onFocus={() => setActiveOptionIndex(index)}
                   onClick={() => handleOptionSelect(index)}
-                  className={`question-option${isSelected ? ' question-option-selected' : ''}`}
+                  className={`question-option${isSelected ? ' question-option-selected' : ''}${activeOptionIndex === index ? ' question-option-keyboard-active' : ''}`}
                 >
                   <span className="question-option-marker">{String.fromCharCode(65 + index)}</span>
                   <span>{option}</span>

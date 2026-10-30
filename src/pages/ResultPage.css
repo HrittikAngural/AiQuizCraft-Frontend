@@ -1,6 +1,6 @@
 .result-page {
-  min-height: 100%;
-  padding: 42px 20px 56px;
+  min-height: auto;
+  padding: 42px 20px 20px;
   background: transparent;
   color: #202923;
   font-family: 'Inter', system-ui, 'Segoe UI', sans-serif;
@@ -493,6 +493,12 @@
   background: #d9eddd;
 }
 
+.result-answer-skipped-correct {
+  border-color: #d9ded9;
+  border-left: 4px solid #aab2aa;
+  background: #f0f2f0;
+}
+
 .result-answer-incorrect {
   border-color: #d9958d;
   border-left: 4px solid #c4483d;
@@ -547,6 +553,10 @@
   color: #276b37;
 }
 
+.result-answer-skipped-correct .result-answer-text {
+  color: #737c74;
+}
+
 .result-answer-wrong-mark {
   display: inline-flex;
   align-items: center;
@@ -583,51 +593,53 @@
 
 .result-explanation {
   margin: 14px 0 0 44px;
-  padding: 11px 12px;
+  padding: 8px 10px;
   border: 1px solid #e6ebe5;
   border-radius: 10px;
   background: #f8faf7;
 }
 
-.result-explanation-toggle {
+.result-explanation-header {
   display: flex;
-  width: 100%;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #627a66;
-  font: inherit;
-  cursor: pointer;
 }
 
-.result-explanation-toggle > span,
-.result-explanation-toggle-action {
+.result-explanation-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  color: #627a66;
   font-size: 12px;
   font-weight: 650;
 }
 
-.result-explanation-toggle-action {
-  color: #818c81;
-  font-size: 11px;
-  font-weight: 550;
+.result-explanation-toggle {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  align-items: center;
+  padding: 0;
+  border: 1px solid #dfe7df;
+  border-radius: 10px;
+  background: #fff;
+  color: #58735d;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 
-.result-explanation-toggle-action svg {
-  transition: transform 180ms ease;
-}
-
-.result-explanation-open .result-explanation-toggle-action svg {
-  transform: rotate(180deg);
+.result-explanation-toggle:hover {
+  transform: translateY(-1px);
+  border-color: #bed0c0;
+  background: #f0f6f0;
 }
 
 .result-explanation-copy {
-  margin: 9px 0 0;
+  margin: 8px 0 0;
   color: #616d62;
   font-size: 14px;
   line-height: 1.65;
@@ -771,7 +783,7 @@
 
 @media (max-width: 680px) {
   .result-page {
-    padding: 30px 14px 40px;
+    padding: 30px 14px 16px;
   }
 
   .result-summary-card {

@@ -1,10 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, ChevronDown, Zap, Hourglass } from 'lucide-react';
+import { LottieLight } from 'lottie-react';
+import quizLoadingAnimation from '../assets/quiz-loading.js';
+import searchAnimation from '../assets/search.svg';
+import { quizTimeOptions } from '../data/quizOptions';
 import './TakeQuizPage.css';
 
 const hotTopics = ['JavaScript', 'Python', 'React', 'Node.js', 'Data Structures', 'Algorithms'];
 const difficultyLevels = ['Easy', 'Medium', 'Hard'];
+
+function usePrefersReducedMotion() {
+    const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+        updatePreference();
+
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', updatePreference);
+            return () => mediaQuery.removeEventListener('change', updatePreference);
+        }
+
+        mediaQuery.addListener(updatePreference);
+        return () => mediaQuery.removeListener(updatePreference);
+    }, []);
+
+    return prefersReducedMotion;
+}
 
 export default function TakeQuizPage() {
     const location = useLocation();
@@ -15,14 +39,16 @@ export default function TakeQuizPage() {
         ? location.state.backgroundTopics
         : [];
     const [topic, setTopic] = useState(trendingTopic);
-    const [numQuestions, setNumQuestions] = useState(10);
+    const [numQuestions, setNumQuestions] = useState(Number(location.state?.numQuestions) || 10);
     const [difficulty, setDifficulty] = useState(location.state?.difficulty || 'Medium');
-    const [totalTime, setTotalTime] = useState(1); // Default 1 minute
+    const [totalTime, setTotalTime] = useState(Number(location.state?.totalTime) || 1);
     const [randomTopic, setRandomTopic] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [error, setError] = useState(null);
     const [isAutoStarting, setIsAutoStarting] = useState(Boolean(location.state?.launchQuiz));
+    const [startedAutomatically] = useState(Boolean(location.state?.launchQuiz));
+    const prefersReducedMotion = usePrefersReducedMotion();
     const navigate = useNavigate();
     const topicInputRef = useRef(null);
     const transitionTimer = useRef(null);
@@ -109,23 +135,24 @@ export default function TakeQuizPage() {
                         await new Promise(resolve => {
                             transitionTimer.current = window.setTimeout(resolve, reducedMotion ? 0 : 1280);
                         });
-        
+
             navigate('/questions', {
+              replace: startedAutomatically,
               state: {
                 questions,
                 topic: selectedTopic,
                 quizAttemptId: globalThis.crypto.randomUUID(),
-                                subject: selectedSubject,
+                subject: selectedSubject,
                 isSubjectQuiz: Boolean(selectedSubject),
                 topicTransition: topicTransition || backgroundTopics.length > 0,
-                                backgroundTopics,
+                backgroundTopics,
                 numQuestions,
                 difficulty,
                 totalTime,
                 showPointsOnQuestions: Boolean(location.state?.showPointsOnQuestions),
                 fromCache: data.cached
-                            },
-                            viewTransition: true
+              },
+              viewTransition: true
             });
           } catch (err) {
                         setError(err?.message || 'Quiz generation failed. Please try again.');
@@ -155,11 +182,33 @@ export default function TakeQuizPage() {
         startQuiz();
     };
 
+    if (isAutoStarting && !error && selectedSubject) {
+        return (
+            <div className="take-quiz-stage subject-quiz-loading-stage">
+                <img className="subject-quiz-search-animation" src={searchAnimation} alt="" aria-hidden="true" />
+                <section className="subject-quiz-loading-copy" role="status" aria-live="polite">
+                    <span className="subject-quiz-loading-eyebrow">SUBJECT QUIZ</span>
+                    <h1>Preparing your {difficulty.toLowerCase()} quiz</h1>
+                    <p>{topic} · {numQuestions} questions</p>
+                    <span className="subject-quiz-loading-note">Generating questions. This may take a moment…</span>
+                    <span className="subject-quiz-loading-progress" aria-hidden="true"><span /></span>
+                </section>
+            </div>
+        );
+    }
+
     if (isAutoStarting && !error) {
         return (
             <div className="take-quiz-stage">
                 <section className="take-quiz-card quiz-auto-start" role="status" aria-live="polite">
-                    <span className="quiz-setup-icon"><Hourglass className="animate-spin" size={22} /></span>
+                    <div className="quiz-auto-start-animation" aria-hidden="true">
+                        <LottieLight
+                            src={quizLoadingAnimation}
+                            loop={!prefersReducedMotion}
+                            autoplay={!prefersReducedMotion}
+                            style={{ width: '100%', height: '100%' }}
+                        />
+                    </div>
                     <h1>Preparing your {difficulty.toLowerCase()} quiz</h1>
                     <p>{topic} · {numQuestions} questions</p>
                     <span>Generating questions. This may take a moment…</span>
@@ -217,7 +266,7 @@ export default function TakeQuizPage() {
                             value={numQuestions}
                             onChange={(e) => setNumQuestions(Number(e.target.value))}
                         >
-                            {[5, 10, 15, 20].map(num => (
+                            {[5, 10, 20, 50, 100].map(num => (
                                 <option key={num} value={num}>{num}</option>
                             ))}
                         </select>
@@ -257,7 +306,7 @@ export default function TakeQuizPage() {
                                     value={totalTime}
                                     onChange={(e) => setTotalTime(Number(e.target.value))}
                                 >
-                                    {[1, 2, 5, 10, 15, 20].map(min => (
+                                    {quizTimeOptions.map(min => (
                                         <option key={min} value={min}>
                                             {min} minute{min !== 1 ? 's' : ''}
                                         </option>

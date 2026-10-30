@@ -80,7 +80,13 @@ function QuestionReviewCard({ question, topic, index, selectedOption, expanded, 
         {options.map((option, optionIndex) => {
           const isSelected = selectedOption === optionIndex;
           const isCorrectAnswer = question.correctAnswer === optionIndex;
-          const answerState = isCorrectAnswer ? 'correct' : isSelected ? 'incorrect' : 'neutral';
+          const answerState = outcome === 'skipped' && isCorrectAnswer
+            ? 'skipped-correct'
+            : isCorrectAnswer
+              ? 'correct'
+              : isSelected
+                ? 'incorrect'
+                : 'neutral';
 
           return (
             <div className={`result-answer result-answer-${answerState}`} key={`${optionIndex}-${option}`}>
@@ -88,7 +94,7 @@ function QuestionReviewCard({ question, topic, index, selectedOption, expanded, 
               <span className="result-answer-text">{option}</span>
               <span className="result-answer-tags">
                 {isSelected && <span className="result-answer-tag">Your answer</span>}
-                {isCorrectAnswer && (
+                {isCorrectAnswer && outcome !== 'skipped' && (
                   <span className="result-answer-correct-mark">
                     <Check size={14} /> Correct answer
                   </span>
@@ -111,18 +117,19 @@ function QuestionReviewCard({ question, topic, index, selectedOption, expanded, 
 
       {explanation ? (
         <div className={`result-explanation${expanded ? ' result-explanation-open' : ''}`}>
-          <button
-            type="button"
-            className="result-explanation-toggle"
-            onClick={onToggle}
-            aria-expanded={expanded}
-          >
-            <span><CircleHelp size={16} /> Explanation</span>
-            <span className="result-explanation-toggle-action">
-              {expanded ? 'Hide explanation' : 'View explanation'}
-              {expanded ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-            </span>
-          </button>
+          <div className="result-explanation-header">
+            <span className="result-explanation-label"><CircleHelp size={16} /> Explanation</span>
+            <button
+              type="button"
+              className="result-explanation-toggle"
+              onClick={onToggle}
+              aria-label={expanded ? 'Hide explanation' : 'Show explanation'}
+              aria-expanded={expanded}
+              title={expanded ? 'Hide explanation' : 'Show explanation'}
+            >
+              {expanded ? <EyeOff size={22} aria-hidden="true" /> : <Eye size={22} aria-hidden="true" />}
+            </button>
+          </div>
           {expanded && (
             <>
               <p className="result-explanation-copy">{explanation}</p>
@@ -151,7 +158,7 @@ export default function ResultPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
-  const [collapsedExplanations, setCollapsedExplanations] = useState(() => new Set());
+  const [expandedExplanations, setExpandedExplanations] = useState(() => new Set());
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -282,7 +289,7 @@ export default function ResultPage() {
     ));
 
   const toggleExplanation = (index) => {
-    setCollapsedExplanations((current) => {
+    setExpandedExplanations((current) => {
       const next = new Set(current);
       if (next.has(index)) next.delete(index);
       else next.add(index);
@@ -388,9 +395,7 @@ export default function ResultPage() {
           {visibleQuestions.length ? (
             <div className="result-question-list">
               {visibleQuestions.map(({ question, index }) => {
-                const outcome = getOutcome(question, selectedOptionsArray[index]);
-                const expandedByDefault = outcome !== 'correct';
-                const expanded = collapsedExplanations.has(index) ? !expandedByDefault : expandedByDefault;
+                const expanded = expandedExplanations.has(index);
 
                 return (
                   <QuestionReviewCard

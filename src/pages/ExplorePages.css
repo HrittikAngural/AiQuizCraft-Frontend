@@ -400,16 +400,25 @@
 .topic-card-main h3 { overflow: hidden; margin: 0; color: #102b4e; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
 .topic-card-main > span { color: #687888; font-size: 12px; }
 
-.topic-difficulty-control {
+.topic-card-settings {
   display: grid;
   flex: 0 0 auto;
+  grid-template-columns: 76px 84px 104px;
+  gap: 8px;
+}
+
+.topic-card-setting {
+  display: grid;
+  min-width: 0;
   gap: 4px;
   color: #77859a;
   font-size: 9px;
   font-weight: 650;
 }
 
-.difficulty-select {
+.topic-setting-select {
+  width: 100%;
+  min-width: 0;
   min-height: 34px;
   padding: 0 25px 0 9px;
   border: 1px solid #e5e8ef;
@@ -423,14 +432,14 @@
   cursor: pointer;
 }
 
-.difficulty-select:focus-visible {
+.topic-setting-select:focus-visible {
   outline: 2px solid #9a7ce5;
   outline-offset: 2px;
 }
 
-.difficulty-select.difficulty-beginner { border-color: #d6ead9; background-color: #eef8f0; color: #448257; }
-.difficulty-select.difficulty-intermediate { border-color: #f1e3bf; background-color: #fff7e8; color: #a87b24; }
-.difficulty-select.difficulty-advanced { border-color: #f0d8d3; background-color: #fff2ef; color: #bd6252; }
+.topic-setting-select.difficulty-beginner { border-color: #d6ead9; background-color: #eef8f0; color: #448257; }
+.topic-setting-select.difficulty-intermediate { border-color: #f1e3bf; background-color: #fff7e8; color: #a87b24; }
+.topic-setting-select.difficulty-advanced { border-color: #f0d8d3; background-color: #fff2ef; color: #bd6252; }
 
 .topic-take-button {
   display: inline-flex;
@@ -475,7 +484,14 @@
   .topic-filter { flex: 1; padding: 0 6px; font-size: 11px; }
   .topic-card { flex-wrap: wrap; gap: 10px; padding: 13px; }
   .topic-card-main { flex-basis: calc(100% - 55px); }
-  .topic-difficulty-control { margin-left: 52px; }
+  .topic-card-settings {
+    flex: 1 1 calc(100% - 52px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 52px;
+  }
+  .topic-card-setting:last-child { grid-column: 1 / -1; }
+  .topic-card-setting { min-width: 0; }
+  .topic-setting-select { padding-right: 18px; padding-left: 6px; font-size: 10px; }
   .topic-take-button { margin-left: auto; }
 }
 
@@ -566,16 +582,16 @@ html[data-theme="dark"] .topic-filter-active {
   color: #fff;
 }
 
-html[data-theme="dark"] .topic-difficulty-control {
+html[data-theme="dark"] .topic-card-setting {
   color: #aab6c3;
 }
 
-html[data-theme="dark"] .difficulty-select {
+html[data-theme="dark"] .topic-setting-select {
   border-color: #414c58;
   background-color: #26313b;
   color: #e0e7ef;
 }
 
-html[data-theme="dark"] .difficulty-select.difficulty-beginner { border-color: #42684f; background-color: #25392c; color: #a9d9b3; }
-html[data-theme="dark"] .difficulty-select.difficulty-intermediate { border-color: #6e5935; background-color: #3a3123; color: #e2c68b; }
-html[data-theme="dark"] .difficulty-select.difficulty-advanced { border-color: #71453f; background-color: #402a28; color: #e9aaa0; }
+html[data-theme="dark"] .topic-setting-select.difficulty-beginner { border-color: #42684f; background-color: #25392c; color: #a9d9b3; }
+html[data-theme="dark"] .topic-setting-select.difficulty-intermediate { border-color: #6e5935; background-color: #3a3123; color: #e2c68b; }
+html[data-theme="dark"] .topic-setting-select.difficulty-advanced { border-color: #71453f; background-color: #402a28; color: #e9aaa0; }
